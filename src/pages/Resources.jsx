@@ -48,26 +48,37 @@ export default function Resources() {
       .finally(() => setLoading(false))
   }, [location])
 
-  const handleZipSearch = () => {
+  const handleZipSearch = async () => {
     const clean = zip.trim()
     if (!/^\d{5}$/.test(clean)) {
       setError('invalid_zip')
       return
     }
-    // Approximate coordinates from ZIP prefix
-    const prefix = parseInt(clean.substring(0, 3))
-    let lat = 39.5, lng = -98.35
-    if (prefix < 200)      { lat = 40.7;  lng = -74.0  }
-    else if (prefix < 400) { lat = 38.9;  lng = -77.0  }
-    else if (prefix < 500) { lat = 33.7;  lng = -84.4  }
-    else if (prefix < 600) { lat = 41.9;  lng = -87.6  }
-    else if (prefix < 700) { lat = 38.6;  lng = -90.2  }
-    else if (prefix < 800) { lat = 29.8;  lng = -95.4  }
-    else if (prefix < 900) { lat = 39.7;  lng = -104.9 }
-    else                   { lat = 34.0;  lng = -118.2 }
-    setLocation({ latitude: lat, longitude: lng })
-    setLocationLabel(`ZIP ${clean}`)
+    setLoading(true)
     setError(null)
+    try {
+      // Use Nominatim (OpenStreetMap) for accurate ZIP geocoding — free, no API key
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?postalcode=${clean}&country=US&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      )
+      const data = await res.json()
+      if (data.length === 0) {
+        setError('zip_not_found')
+        setLoading(false)
+        return
+      }
+      const { lat, lon, display_name } = data[0]
+      // Extract city/state from display_name
+      const parts = display_name.split(', ')
+      const label = parts.length >= 2 ? `${parts[0]}, ${parts[1]}` : `ZIP ${clean}`
+      setLocation({ latitude: parseFloat(lat), longitude: parseFloat(lon) })
+      setLocationLabel(label)
+    } catch {
+      setError('geocode_failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const mapCenter = location
