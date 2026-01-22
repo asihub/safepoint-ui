@@ -1,6 +1,45 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
-import { Phone, MapPin, FileText, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react'
+import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react'
+
+const STORAGE_KEY = 'safepoint_history'
+const MAX_ENTRIES = 30
+
+// Save result to localStorage directly — no hook dependency
+function saveToHistory(result) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    const prev = raw ? JSON.parse(raw) : []
+
+    // Deduplicate — skip if same result within last 5 seconds
+    if (prev.length > 0) {
+      const last = prev[0]
+      const diff = Date.now() - new Date(last.timestamp).getTime()
+      if (diff < 5000 &&
+          last.riskLevel === result.riskLevel &&
+          last.phq9Score === result.phq9Score &&
+          last.gad7Score === result.gad7Score) {
+        return
+      }
+    }
+
+    const entry = {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      riskLevel: result.riskLevel,
+      phq9Score: result.phq9Score,
+      gad7Score: result.gad7Score,
+      confidence: result.confidence,
+      signals: result.aiAnalysis?.signals || [],
+    }
+
+    const updated = [entry, ...prev].slice(0, MAX_ENTRIES)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+  } catch (e) {
+    console.warn('Could not save to history:', e)
+  }
+}
 
 const RISK_CONFIG = {
   LOW: {
@@ -31,6 +70,11 @@ export default function Results() {
   const { assessment } = useAssessmentContext()
   const result = assessment.result
 
+  // Save to history once on mount
+  useEffect(() => {
+    if (result) saveToHistory(result)
+  }, [])
+
   if (!result) {
     navigate('/')
     return null
@@ -55,7 +99,7 @@ export default function Results() {
         </div>
       </div>
 
-      {/* 988 CTA — shown for HIGH */}
+      {/* 988 CTA */}
       {result.show988 && (
         <a
           href="tel:988"
@@ -120,6 +164,13 @@ export default function Results() {
         >
           <FileText size={18} /> Build my safety plan
         </button>
+        <button
+          onClick={() => navigate('/progress')}
+          className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium"
+          style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}
+        >
+          <TrendingUp size={18} /> Track my progress
+        </button>
       </div>
     </div>
   )
@@ -129,7 +180,6 @@ function ScoreRow({ label, score, max, severity }) {
   const color = severity === 'severe' ? 'var(--high)'
               : severity === 'moderate' ? 'var(--medium)'
               : 'var(--low)'
-
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
@@ -140,7 +190,7 @@ function ScoreRow({ label, score, max, severity }) {
       </div>
       <div className="h-1.5 rounded-full" style={{ background: 'var(--sand-dark)' }}>
         <div
-          className="h-full rounded-full transition-all"
+          className="h-full rounded-full"
           style={{ width: `${(score / max) * 100}%`, background: color }}
         />
       </div>

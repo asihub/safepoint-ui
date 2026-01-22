@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 
-// PHQ-9 questions
-const PHQ9 = {
+// PHQ-9 — self and proxy versions
+const PHQ9_SELF = {
   key: 'phq9',
   title: 'Over the last 2 weeks, how often have you been bothered by the following?',
   questions: [
@@ -18,16 +18,26 @@ const PHQ9 = {
     'Moving or speaking so slowly that other people could have noticed',
     'Thoughts that you would be better off dead, or of hurting yourself',
   ],
-  options: [
-    { label: 'Not at all', value: 0 },
-    { label: 'Several days', value: 1 },
-    { label: 'More than half the days', value: 2 },
-    { label: 'Nearly every day', value: 3 },
+}
+
+const PHQ9_PROXY = {
+  key: 'phq9',
+  title: 'Over the last 2 weeks, how often has the person you are concerned about been bothered by the following?',
+  questions: [
+    'Little interest or pleasure in doing things',
+    'Seeming down, depressed, or hopeless',
+    'Trouble falling or staying asleep, or sleeping too much',
+    'Seeming tired or having little energy',
+    'Changes in appetite — eating much less or much more than usual',
+    'Expressing feelings of worthlessness or being a failure',
+    'Trouble concentrating or making decisions',
+    'Moving or speaking unusually slowly, or seeming restless or agitated',
+    'Expressing thoughts of being better off dead, or of hurting themselves',
   ],
 }
 
-// GAD-7 questions
-const GAD7 = {
+// GAD-7 — self and proxy versions
+const GAD7_SELF = {
   key: 'gad7',
   title: 'Over the last 2 weeks, how often have you been bothered by the following?',
   questions: [
@@ -39,23 +49,43 @@ const GAD7 = {
     'Becoming easily annoyed or irritable',
     'Feeling afraid, as if something awful might happen',
   ],
-  options: [
-    { label: 'Not at all', value: 0 },
-    { label: 'Several days', value: 1 },
-    { label: 'More than half the days', value: 2 },
-    { label: 'Nearly every day', value: 3 },
+}
+
+const GAD7_PROXY = {
+  key: 'gad7',
+  title: 'Over the last 2 weeks, how often has the person you are concerned about shown the following?',
+  questions: [
+    'Seeming nervous, anxious, or on edge',
+    'Unable to stop or control worrying',
+    'Worrying excessively about different things',
+    'Difficulty relaxing or unwinding',
+    'Seeming restless or unable to sit still',
+    'Becoming easily annoyed or irritable',
+    'Seeming afraid, as if something awful might happen',
   ],
 }
 
-const QUESTIONNAIRES = [PHQ9, GAD7]
+const OPTIONS = [
+  { label: 'Not at all', value: 0 },
+  { label: 'Several days', value: 1 },
+  { label: 'More than half the days', value: 2 },
+  { label: 'Nearly every day', value: 3 },
+]
 
 export default function Screening() {
   const navigate = useNavigate()
   const { setScore, assessment } = useAssessmentContext()
 
-  const [qIndex, setQIndex] = useState(0)   // which questionnaire
-  const [aIndex, setAIndex] = useState(0)   // which question within questionnaire
-  const [answers, setAnswers] = useState({}) // { phq9: [0,1,...], gad7: [...] }
+  const isProxy = assessment.mode === 'proxy'
+
+  // Select questionnaires based on mode
+  const QUESTIONNAIRES = isProxy
+    ? [PHQ9_PROXY, GAD7_PROXY]
+    : [PHQ9_SELF, GAD7_SELF]
+
+  const [qIndex, setQIndex] = useState(0)
+  const [aIndex, setAIndex] = useState(0)
+  const [answers, setAnswers] = useState({})
 
   const q = QUESTIONNAIRES[qIndex]
   const totalQuestions = QUESTIONNAIRES.reduce((s, q) => s + q.questions.length, 0)
@@ -77,8 +107,10 @@ export default function Screening() {
     if (aIndex < q.questions.length - 1) {
       setAIndex(aIndex + 1)
     } else {
-      // Save score for this questionnaire
-      const score = (answers[q.key] || []).reduce((s, v) => s + v, 0) + selected
+      // Save total score for this questionnaire
+      const allAnswers = [...(answers[q.key] || [])]
+      allAnswers[aIndex] = selected
+      const score = allAnswers.reduce((s, v) => s + (v || 0), 0)
       setScore(q.key, score)
 
       if (qIndex < QUESTIONNAIRES.length - 1) {
@@ -103,6 +135,16 @@ export default function Screening() {
 
   return (
     <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-6 py-8">
+
+      {/* Proxy mode banner */}
+      {isProxy && (
+        <div
+          className="rounded-xl px-4 py-2 mb-6 text-sm"
+          style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}
+        >
+          You are completing this assessment on behalf of someone you are concerned about.
+        </div>
+      )}
 
       {/* Progress bar */}
       <div className="mb-8">
@@ -137,7 +179,7 @@ export default function Screening() {
 
         {/* Options */}
         <div className="flex flex-col gap-3">
-          {q.options.map((opt) => (
+          {OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => handleSelect(opt.value)}
