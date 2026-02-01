@@ -3,89 +3,91 @@ import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 
-// PHQ-9 — self and proxy versions
+// PHQ-9 questions — self and proxy versions
 const PHQ9_SELF = {
   key: 'phq9',
+  loincCode: '44249-1',
   title: 'Over the last 2 weeks, how often have you been bothered by the following?',
   questions: [
-    'Little interest or pleasure in doing things',
-    'Feeling down, depressed, or hopeless',
-    'Trouble falling or staying asleep, or sleeping too much',
-    'Feeling tired or having little energy',
-    'Poor appetite or overeating',
-    'Feeling bad about yourself — or that you are a failure',
-    'Trouble concentrating on things',
-    'Moving or speaking so slowly that other people could have noticed',
-    'Thoughts that you would be better off dead, or of hurting yourself',
+    { text: 'Little interest or pleasure in doing things',                           loincCode: '44250-9' },
+    { text: 'Feeling down, depressed, or hopeless',                                  loincCode: '44255-8' },
+    { text: 'Trouble falling or staying asleep, or sleeping too much',               loincCode: '44259-0' },
+    { text: 'Feeling tired or having little energy',                                 loincCode: '44254-1' },
+    { text: 'Poor appetite or overeating',                                           loincCode: '44251-7' },
+    { text: 'Feeling bad about yourself — or that you are a failure',                loincCode: '44258-2' },
+    { text: 'Trouble concentrating on things',                                       loincCode: '44252-5' },
+    { text: 'Moving or speaking so slowly that other people could have noticed',     loincCode: '44253-3' },
+    { text: 'Thoughts that you would be better off dead, or of hurting yourself',    loincCode: '44260-8' },
   ],
 }
 
 const PHQ9_PROXY = {
   key: 'phq9',
+  loincCode: '44249-1',
   title: 'Over the last 2 weeks, how often has the person you are concerned about been bothered by the following?',
   questions: [
-    'Little interest or pleasure in doing things',
-    'Seeming down, depressed, or hopeless',
-    'Trouble falling or staying asleep, or sleeping too much',
-    'Seeming tired or having little energy',
-    'Changes in appetite — eating much less or much more than usual',
-    'Expressing feelings of worthlessness or being a failure',
-    'Trouble concentrating or making decisions',
-    'Moving or speaking unusually slowly, or seeming restless or agitated',
-    'Expressing thoughts of being better off dead, or of hurting themselves',
+    { text: 'Little interest or pleasure in doing things',                            loincCode: '44250-9' },
+    { text: 'Seeming down, depressed, or hopeless',                                  loincCode: '44255-8' },
+    { text: 'Trouble falling or staying asleep, or sleeping too much',               loincCode: '44259-0' },
+    { text: 'Seeming tired or having little energy',                                 loincCode: '44254-1' },
+    { text: 'Changes in appetite — eating much less or much more than usual',        loincCode: '44251-7' },
+    { text: 'Expressing feelings of worthlessness or being a failure',               loincCode: '44258-2' },
+    { text: 'Trouble concentrating or making decisions',                             loincCode: '44252-5' },
+    { text: 'Moving or speaking unusually slowly, or seeming restless or agitated',  loincCode: '44253-3' },
+    { text: 'Expressing thoughts of being better off dead, or of hurting themselves', loincCode: '44260-8' },
   ],
 }
 
-// GAD-7 — self and proxy versions
+// GAD-7 questions — self and proxy versions
 const GAD7_SELF = {
   key: 'gad7',
+  loincCode: '69737-5',
   title: 'Over the last 2 weeks, how often have you been bothered by the following?',
   questions: [
-    'Feeling nervous, anxious, or on edge',
-    'Not being able to stop or control worrying',
-    'Worrying too much about different things',
-    'Trouble relaxing',
-    'Being so restless that it is hard to sit still',
-    'Becoming easily annoyed or irritable',
-    'Feeling afraid, as if something awful might happen',
+    { text: 'Feeling nervous, anxious, or on edge',                      loincCode: '69725-0' },
+    { text: 'Not being able to stop or control worrying',                loincCode: '68509-9' },
+    { text: 'Worrying too much about different things',                  loincCode: '69733-4' },
+    { text: 'Trouble relaxing',                                          loincCode: '69734-2' },
+    { text: 'Being so restless that it is hard to sit still',            loincCode: '69735-9' },
+    { text: 'Becoming easily annoyed or irritable',                      loincCode: '69736-7' },
+    { text: 'Feeling afraid, as if something awful might happen',        loincCode: '69689-8' },
   ],
 }
 
 const GAD7_PROXY = {
   key: 'gad7',
+  loincCode: '69737-5',
   title: 'Over the last 2 weeks, how often has the person you are concerned about shown the following?',
   questions: [
-    'Seeming nervous, anxious, or on edge',
-    'Unable to stop or control worrying',
-    'Worrying excessively about different things',
-    'Difficulty relaxing or unwinding',
-    'Seeming restless or unable to sit still',
-    'Becoming easily annoyed or irritable',
-    'Seeming afraid, as if something awful might happen',
+    { text: 'Seeming nervous, anxious, or on edge',                      loincCode: '69725-0' },
+    { text: 'Unable to stop or control worrying',                        loincCode: '68509-9' },
+    { text: 'Worrying excessively about different things',               loincCode: '69733-4' },
+    { text: 'Difficulty relaxing or unwinding',                          loincCode: '69734-2' },
+    { text: 'Seeming restless or unable to sit still',                   loincCode: '69735-9' },
+    { text: 'Becoming easily annoyed or irritable',                      loincCode: '69736-7' },
+    { text: 'Seeming afraid, as if something awful might happen',        loincCode: '69689-8' },
   ],
 }
 
 const OPTIONS = [
-  { label: 'Not at all', value: 0 },
-  { label: 'Several days', value: 1 },
-  { label: 'More than half the days', value: 2 },
-  { label: 'Nearly every day', value: 3 },
+  { label: 'Not at all',              value: 0, code: 'LA6568-5' },
+  { label: 'Several days',            value: 1, code: 'LA6569-3' },
+  { label: 'More than half the days', value: 2, code: 'LA6570-1' },
+  { label: 'Nearly every day',        value: 3, code: 'LA6571-9' },
 ]
 
 export default function Screening() {
   const navigate = useNavigate()
-  const { setScore, assessment } = useAssessmentContext()
+  const { setScore, setAnswers, assessment } = useAssessmentContext()
 
   const isProxy = assessment.mode === 'proxy'
-
-  // Select questionnaires based on mode
   const QUESTIONNAIRES = isProxy
     ? [PHQ9_PROXY, GAD7_PROXY]
     : [PHQ9_SELF, GAD7_SELF]
 
   const [qIndex, setQIndex] = useState(0)
   const [aIndex, setAIndex] = useState(0)
-  const [answers, setAnswers] = useState({})
+  const [answers, setAnswersLocal] = useState({}) // { phq9: [0,1,...], gad7: [...] }
 
   const q = QUESTIONNAIRES[qIndex]
   const totalQuestions = QUESTIONNAIRES.reduce((s, q) => s + q.questions.length, 0)
@@ -98,20 +100,24 @@ export default function Screening() {
   const handleSelect = (value) => {
     const updated = [...currentAnswers]
     updated[aIndex] = value
-    setAnswers(prev => ({ ...prev, [q.key]: updated }))
+    setAnswersLocal(prev => ({ ...prev, [q.key]: updated }))
   }
 
   const handleNext = () => {
     if (selected === undefined) return
 
+    // Update answers array
+    const allAnswers = [...currentAnswers]
+    allAnswers[aIndex] = selected
+
     if (aIndex < q.questions.length - 1) {
+      setAnswersLocal(prev => ({ ...prev, [q.key]: allAnswers }))
       setAIndex(aIndex + 1)
     } else {
-      // Save total score for this questionnaire
-      const allAnswers = [...(answers[q.key] || [])]
-      allAnswers[aIndex] = selected
+      // Save score and full answers array to context
       const score = allAnswers.reduce((s, v) => s + (v || 0), 0)
       setScore(q.key, score)
+      setAnswers(q.key, allAnswers)  // ← save per-item answers for FHIR
 
       if (qIndex < QUESTIONNAIRES.length - 1) {
         setQIndex(qIndex + 1)
@@ -174,7 +180,7 @@ export default function Screening() {
             color: 'var(--charcoal)',
           }}
         >
-          {q.questions[aIndex]}
+          {q.questions[aIndex].text}
         </h2>
 
         {/* Options */}

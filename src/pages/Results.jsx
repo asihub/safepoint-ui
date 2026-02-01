@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react'
 import ExportPdf from '../components/ExportPdf'
+import ExportFhir from '../components/ExportFhir'
 
 const STORAGE_KEY = 'safepoint_history'
 const MAX_ENTRIES = 30
@@ -173,6 +174,7 @@ export default function Results() {
           <TrendingUp size={18} /> Track my progress
         </button>
         <ExportPdf result={result} />
+        <ExportFhir result={result} />
       </div>
     </div>
   )

@@ -2,12 +2,13 @@ import { useState } from 'react'
 
 // Global assessment state shared across screens
 const initialState = {
-  mode: null,              // 'self' | 'proxy'
-  questionnaireScores: {}, // { phq9: 14, gad7: 10, ... }
+  mode: null,                // 'self' | 'proxy'
+  questionnaireScores: {},   // { phq9: 14, gad7: 10 }
+  questionnaireAnswers: {},  // { phq9: [0,1,2,...], gad7: [1,2,...] } — per-item answers for FHIR
   freeText: '',
   insuranceType: 'UNKNOWN',
-  location: null,          // { latitude, longitude }
-  result: null,            // AnalysisResponse from API
+  location: null,
+  result: null,
 }
 
 export function useAssessment() {
@@ -16,10 +17,18 @@ export function useAssessment() {
   const setMode = (mode) =>
     setAssessment(prev => ({ ...prev, mode }))
 
+  // Save total score for a questionnaire
   const setScore = (key, value) =>
     setAssessment(prev => ({
       ...prev,
       questionnaireScores: { ...prev.questionnaireScores, [key]: value }
+    }))
+
+  // Save individual answers array for a questionnaire (for FHIR QuestionnaireResponse)
+  const setAnswers = (key, answers) =>
+    setAssessment(prev => ({
+      ...prev,
+      questionnaireAnswers: { ...prev.questionnaireAnswers, [key]: answers }
     }))
 
   const setFreeText = (text) =>
@@ -40,6 +49,7 @@ export function useAssessment() {
     assessment,
     setMode,
     setScore,
+    setAnswers,
     setFreeText,
     setInsurance,
     setLocation,
