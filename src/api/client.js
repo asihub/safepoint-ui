@@ -7,7 +7,7 @@ const client = axios.create({
   timeout: 15000,
 })
 
-// Analysis API
+// Analysis API — lang tells backend whether to translate freeText
 export const analyzeRisk = (payload) =>
   client.post('/analysis', payload).then(r => r.data)
 
