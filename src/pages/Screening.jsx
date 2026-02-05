@@ -1,101 +1,180 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
+import { useLanguage } from '../hooks/useLanguage.jsx'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 
-// PHQ-9 questions — self and proxy versions
-const PHQ9_SELF = {
-  key: 'phq9',
-  loincCode: '44249-1',
-  title: 'Over the last 2 weeks, how often have you been bothered by the following?',
-  questions: [
-    { text: 'Little interest or pleasure in doing things',                           loincCode: '44250-9' },
-    { text: 'Feeling down, depressed, or hopeless',                                  loincCode: '44255-8' },
-    { text: 'Trouble falling or staying asleep, or sleeping too much',               loincCode: '44259-0' },
-    { text: 'Feeling tired or having little energy',                                 loincCode: '44254-1' },
-    { text: 'Poor appetite or overeating',                                           loincCode: '44251-7' },
-    { text: 'Feeling bad about yourself — or that you are a failure',                loincCode: '44258-2' },
-    { text: 'Trouble concentrating on things',                                       loincCode: '44252-5' },
-    { text: 'Moving or speaking so slowly that other people could have noticed',     loincCode: '44253-3' },
-    { text: 'Thoughts that you would be better off dead, or of hurting yourself',    loincCode: '44260-8' },
-  ],
+// PHQ-9 questions — English and Spanish, self and proxy
+const PHQ9_QUESTIONS = {
+  en: {
+    self:  [
+      'Little interest or pleasure in doing things',
+      'Feeling down, depressed, or hopeless',
+      'Trouble falling or staying asleep, or sleeping too much',
+      'Feeling tired or having little energy',
+      'Poor appetite or overeating',
+      'Feeling bad about yourself — or that you are a failure',
+      'Trouble concentrating on things',
+      'Moving or speaking so slowly that other people could have noticed',
+      'Thoughts that you would be better off dead, or of hurting yourself',
+    ],
+    proxy: [
+      'Little interest or pleasure in doing things',
+      'Seeming down, depressed, or hopeless',
+      'Trouble falling or staying asleep, or sleeping too much',
+      'Seeming tired or having little energy',
+      'Changes in appetite — eating much less or much more than usual',
+      'Expressing feelings of worthlessness or being a failure',
+      'Trouble concentrating or making decisions',
+      'Moving or speaking unusually slowly, or seeming restless or agitated',
+      'Expressing thoughts of being better off dead, or of hurting themselves',
+    ],
+  },
+  es: {
+    self:  [
+      'Poco interés o placer en hacer las cosas',
+      'Sentirse deprimido, triste o sin esperanza',
+      'Dificultad para quedarse dormido, permanecer dormido o dormir demasiado',
+      'Sentirse cansado o tener poca energía',
+      'Poco apetito o comer en exceso',
+      'Sentirse mal consigo mismo — o que es un fracaso',
+      'Dificultad para concentrarse en las cosas',
+      'Moverse o hablar tan lento que otras personas lo han notado',
+      'Pensamientos de que estaría mejor muerto, o de hacerse daño',
+    ],
+    proxy: [
+      'Poco interés o placer en hacer las cosas',
+      'Parecer deprimido, triste o sin esperanza',
+      'Dificultad para quedarse dormido o dormir demasiado',
+      'Parecer cansado o tener poca energía',
+      'Cambios en el apetito — comer mucho menos o mucho más de lo habitual',
+      'Expresar sentimientos de inutilidad o fracaso',
+      'Dificultad para concentrarse o tomar decisiones',
+      'Moverse o hablar inusualmente lento, o parecer inquieto o agitado',
+      'Expresar pensamientos de estar mejor muerto o de hacerse daño',
+    ],
+  },
 }
 
-const PHQ9_PROXY = {
-  key: 'phq9',
-  loincCode: '44249-1',
-  title: 'Over the last 2 weeks, how often has the person you are concerned about been bothered by the following?',
-  questions: [
-    { text: 'Little interest or pleasure in doing things',                            loincCode: '44250-9' },
-    { text: 'Seeming down, depressed, or hopeless',                                  loincCode: '44255-8' },
-    { text: 'Trouble falling or staying asleep, or sleeping too much',               loincCode: '44259-0' },
-    { text: 'Seeming tired or having little energy',                                 loincCode: '44254-1' },
-    { text: 'Changes in appetite — eating much less or much more than usual',        loincCode: '44251-7' },
-    { text: 'Expressing feelings of worthlessness or being a failure',               loincCode: '44258-2' },
-    { text: 'Trouble concentrating or making decisions',                             loincCode: '44252-5' },
-    { text: 'Moving or speaking unusually slowly, or seeming restless or agitated',  loincCode: '44253-3' },
-    { text: 'Expressing thoughts of being better off dead, or of hurting themselves', loincCode: '44260-8' },
-  ],
+// GAD-7 questions — English and Spanish, self and proxy
+const GAD7_QUESTIONS = {
+  en: {
+    self:  [
+      'Feeling nervous, anxious, or on edge',
+      'Not being able to stop or control worrying',
+      'Worrying too much about different things',
+      'Trouble relaxing',
+      'Being so restless that it is hard to sit still',
+      'Becoming easily annoyed or irritable',
+      'Feeling afraid, as if something awful might happen',
+    ],
+    proxy: [
+      'Seeming nervous, anxious, or on edge',
+      'Unable to stop or control worrying',
+      'Worrying excessively about different things',
+      'Difficulty relaxing or unwinding',
+      'Seeming restless or unable to sit still',
+      'Becoming easily annoyed or irritable',
+      'Seeming afraid, as if something awful might happen',
+    ],
+  },
+  es: {
+    self:  [
+      'Sentirse nervioso, ansioso o con los nervios de punta',
+      'No poder dejar de preocuparse o controlar la preocupación',
+      'Preocuparse demasiado por diferentes cosas',
+      'Dificultad para relajarse',
+      'Estar tan inquieto que es difícil quedarse quieto',
+      'Irritarse o enojarse fácilmente',
+      'Sentir miedo, como si algo terrible pudiera pasar',
+    ],
+    proxy: [
+      'Parecer nervioso, ansioso o con los nervios de punta',
+      'No poder dejar de preocuparse',
+      'Preocuparse excesivamente por diferentes cosas',
+      'Dificultad para relajarse',
+      'Parecer inquieto o incapaz de quedarse quieto',
+      'Irritarse o enojarse fácilmente',
+      'Parecer asustado, como si algo terrible pudiera pasar',
+    ],
+  },
 }
 
-// GAD-7 questions — self and proxy versions
-const GAD7_SELF = {
-  key: 'gad7',
-  loincCode: '69737-5',
-  title: 'Over the last 2 weeks, how often have you been bothered by the following?',
-  questions: [
-    { text: 'Feeling nervous, anxious, or on edge',                      loincCode: '69725-0' },
-    { text: 'Not being able to stop or control worrying',                loincCode: '68509-9' },
-    { text: 'Worrying too much about different things',                  loincCode: '69733-4' },
-    { text: 'Trouble relaxing',                                          loincCode: '69734-2' },
-    { text: 'Being so restless that it is hard to sit still',            loincCode: '69735-9' },
-    { text: 'Becoming easily annoyed or irritable',                      loincCode: '69736-7' },
-    { text: 'Feeling afraid, as if something awful might happen',        loincCode: '69689-8' },
-  ],
-}
+// LOINC codes — same regardless of language
+const PHQ9_LOINC = [
+  { linkId: 'phq9-q1', code: '44250-9' },
+  { linkId: 'phq9-q2', code: '44255-8' },
+  { linkId: 'phq9-q3', code: '44259-0' },
+  { linkId: 'phq9-q4', code: '44254-1' },
+  { linkId: 'phq9-q5', code: '44251-7' },
+  { linkId: 'phq9-q6', code: '44258-2' },
+  { linkId: 'phq9-q7', code: '44252-5' },
+  { linkId: 'phq9-q8', code: '44253-3' },
+  { linkId: 'phq9-q9', code: '44260-8' },
+]
 
-const GAD7_PROXY = {
-  key: 'gad7',
-  loincCode: '69737-5',
-  title: 'Over the last 2 weeks, how often has the person you are concerned about shown the following?',
-  questions: [
-    { text: 'Seeming nervous, anxious, or on edge',                      loincCode: '69725-0' },
-    { text: 'Unable to stop or control worrying',                        loincCode: '68509-9' },
-    { text: 'Worrying excessively about different things',               loincCode: '69733-4' },
-    { text: 'Difficulty relaxing or unwinding',                          loincCode: '69734-2' },
-    { text: 'Seeming restless or unable to sit still',                   loincCode: '69735-9' },
-    { text: 'Becoming easily annoyed or irritable',                      loincCode: '69736-7' },
-    { text: 'Seeming afraid, as if something awful might happen',        loincCode: '69689-8' },
-  ],
-}
+const GAD7_LOINC = [
+  { linkId: 'gad7-q1', code: '69725-0' },
+  { linkId: 'gad7-q2', code: '68509-9' },
+  { linkId: 'gad7-q3', code: '69733-4' },
+  { linkId: 'gad7-q4', code: '69734-2' },
+  { linkId: 'gad7-q5', code: '69735-9' },
+  { linkId: 'gad7-q6', code: '69736-7' },
+  { linkId: 'gad7-q7', code: '69689-8' },
+]
 
-const OPTIONS = [
-  { label: 'Not at all',              value: 0, code: 'LA6568-5' },
-  { label: 'Several days',            value: 1, code: 'LA6569-3' },
-  { label: 'More than half the days', value: 2, code: 'LA6570-1' },
-  { label: 'Nearly every day',        value: 3, code: 'LA6571-9' },
+const ANSWER_OPTIONS_EN = [
+  { label: 'Not at all',              value: 0 },
+  { label: 'Several days',            value: 1 },
+  { label: 'More than half the days', value: 2 },
+  { label: 'Nearly every day',        value: 3 },
+]
+
+const ANSWER_OPTIONS_ES = [
+  { label: 'Para nada',                    value: 0 },
+  { label: 'Varios días',                  value: 1 },
+  { label: 'Más de la mitad de los días',  value: 2 },
+  { label: 'Casi todos los días',          value: 3 },
 ]
 
 export default function Screening() {
   const navigate = useNavigate()
   const { setScore, setAnswers, assessment } = useAssessmentContext()
+  const { t, lang } = useLanguage()
 
   const isProxy = assessment.mode === 'proxy'
-  const QUESTIONNAIRES = isProxy
-    ? [PHQ9_PROXY, GAD7_PROXY]
-    : [PHQ9_SELF, GAD7_SELF]
+  const mode    = isProxy ? 'proxy' : 'self'
 
-  const [qIndex, setQIndex] = useState(0)
-  const [aIndex, setAIndex] = useState(0)
-  const [answers, setAnswersLocal] = useState({}) // { phq9: [0,1,...], gad7: [...] }
+  // Build questionnaires with current language and mode
+  const QUESTIONNAIRES = [
+    {
+      key:        'phq9',
+      loincCode:  '44249-1',
+      loincItems: PHQ9_LOINC,
+      title:      isProxy ? t('phq9TitleProxy') : t('phq9Title'),
+      questions:  PHQ9_QUESTIONS[lang]?.[mode] || PHQ9_QUESTIONS.en[mode],
+    },
+    {
+      key:        'gad7',
+      loincCode:  '69737-5',
+      loincItems: GAD7_LOINC,
+      title:      isProxy ? t('gad7TitleProxy') : t('gad7Title'),
+      questions:  GAD7_QUESTIONS[lang]?.[mode] || GAD7_QUESTIONS.en[mode],
+    },
+  ]
 
-  const q = QUESTIONNAIRES[qIndex]
-  const totalQuestions = QUESTIONNAIRES.reduce((s, q) => s + q.questions.length, 0)
-  const answeredSoFar = QUESTIONNAIRES.slice(0, qIndex).reduce((s, q) => s + q.questions.length, 0) + aIndex
-  const progress = Math.round((answeredSoFar / totalQuestions) * 100)
+  const OPTIONS = lang === 'es' ? ANSWER_OPTIONS_ES : ANSWER_OPTIONS_EN
 
-  const currentAnswers = answers[q.key] || []
-  const selected = currentAnswers[aIndex]
+  const [qIndex, setQIndex]           = useState(0)
+  const [aIndex, setAIndex]           = useState(0)
+  const [answers, setAnswersLocal]    = useState({})
+
+  const q               = QUESTIONNAIRES[qIndex]
+  const totalQuestions  = QUESTIONNAIRES.reduce((s, q) => s + q.questions.length, 0)
+  const answeredSoFar   = QUESTIONNAIRES.slice(0, qIndex).reduce((s, q) => s + q.questions.length, 0) + aIndex
+  const progress        = Math.round((answeredSoFar / totalQuestions) * 100)
+  const currentAnswers  = answers[q.key] || []
+  const selected        = currentAnswers[aIndex]
 
   const handleSelect = (value) => {
     const updated = [...currentAnswers]
@@ -105,8 +184,6 @@ export default function Screening() {
 
   const handleNext = () => {
     if (selected === undefined) return
-
-    // Update answers array
     const allAnswers = [...currentAnswers]
     allAnswers[aIndex] = selected
 
@@ -114,10 +191,9 @@ export default function Screening() {
       setAnswersLocal(prev => ({ ...prev, [q.key]: allAnswers }))
       setAIndex(aIndex + 1)
     } else {
-      // Save score and full answers array to context
       const score = allAnswers.reduce((s, v) => s + (v || 0), 0)
       setScore(q.key, score)
-      setAnswers(q.key, allAnswers)  // ← save per-item answers for FHIR
+      setAnswers(q.key, allAnswers)
 
       if (qIndex < QUESTIONNAIRES.length - 1) {
         setQIndex(qIndex + 1)
@@ -144,25 +220,21 @@ export default function Screening() {
 
       {/* Proxy mode banner */}
       {isProxy && (
-        <div
-          className="rounded-xl px-4 py-2 mb-6 text-sm"
-          style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}
-        >
-          You are completing this assessment on behalf of someone you are concerned about.
+        <div className="rounded-xl px-4 py-2 mb-6 text-sm"
+          style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}>
+          {t('proxyBanner')}
         </div>
       )}
 
       {/* Progress bar */}
       <div className="mb-8">
         <div className="flex justify-between text-xs mb-2" style={{ color: 'var(--muted)' }}>
-          <span>{q.key === 'phq9' ? 'Depression screening' : 'Anxiety screening'}</span>
+          <span>{q.key === 'phq9' ? t('depressionScreening') : t('anxietyScreening')}</span>
           <span>{progress}%</span>
         </div>
         <div className="h-1.5 rounded-full" style={{ background: 'var(--sand-dark)' }}>
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${progress}%`, background: 'var(--sage)' }}
-          />
+          <div className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${progress}%`, background: 'var(--sage)' }} />
         </div>
       </div>
 
@@ -171,32 +243,21 @@ export default function Screening() {
         <p className="text-xs font-medium mb-6" style={{ color: 'var(--muted)' }}>
           {q.title}
         </p>
-        <h2
-          className="mb-8"
-          style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: '1.4rem',
-            lineHeight: 1.35,
-            color: 'var(--charcoal)',
-          }}
-        >
-          {q.questions[aIndex].text}
+        <h2 className="mb-8"
+          style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.4rem', lineHeight: 1.35, color: 'var(--charcoal)' }}>
+          {q.questions[aIndex]}
         </h2>
 
-        {/* Options */}
         <div className="flex flex-col gap-3">
           {OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => handleSelect(opt.value)}
+            <button key={opt.value} onClick={() => handleSelect(opt.value)}
               className="w-full text-left px-4 py-3.5 rounded-xl border transition-all"
               style={{
-                background: selected === opt.value ? 'var(--sage-dark)' : 'var(--white)',
-                color: selected === opt.value ? 'var(--white)' : 'var(--charcoal)',
-                borderColor: selected === opt.value ? 'var(--sage-dark)' : 'var(--sand-dark)',
-                fontWeight: selected === opt.value ? 500 : 400,
-              }}
-            >
+                background:   selected === opt.value ? 'var(--sage-dark)' : 'var(--white)',
+                color:        selected === opt.value ? 'var(--white)'     : 'var(--charcoal)',
+                borderColor:  selected === opt.value ? 'var(--sage-dark)' : 'var(--sand-dark)',
+                fontWeight:   selected === opt.value ? 500 : 400,
+              }}>
               {opt.label}
             </button>
           ))}
@@ -205,23 +266,18 @@ export default function Screening() {
 
       {/* Navigation */}
       <div className="flex gap-3 mt-8">
-        <button
-          onClick={handleBack}
+        <button onClick={handleBack}
           className="flex items-center gap-1 px-4 py-3 rounded-xl border"
-          style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}
-        >
-          <ChevronLeft size={18} /> Back
+          style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}>
+          <ChevronLeft size={18} /> {t('back')}
         </button>
-        <button
-          onClick={handleNext}
-          disabled={selected === undefined}
+        <button onClick={handleNext} disabled={selected === undefined}
           className="flex-1 flex items-center justify-center gap-1 px-4 py-3 rounded-xl font-medium transition-all"
           style={{
             background: selected !== undefined ? 'var(--sage-dark)' : 'var(--sand-dark)',
-            color: selected !== undefined ? 'var(--white)' : 'var(--muted)',
-          }}
-        >
-          Next <ChevronRight size={18} />
+            color:      selected !== undefined ? 'var(--white)'     : 'var(--muted)',
+          }}>
+          {t('next')} <ChevronRight size={18} />
         </button>
       </div>
     </div>
