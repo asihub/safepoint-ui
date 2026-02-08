@@ -1,12 +1,14 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Shield } from 'lucide-react'
-import { useLanguage } from '../../hooks/useLanguage.jsx'
+import { useLanguage } from '../../hooks/useLanguage'
 
 export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { t, lang, switchLang } = useLanguage()
   const isHome = location.pathname === '/'
+  // Disable language switcher during screening to prevent mid-questionnaire language change
+  const isScreening = location.pathname === '/screening'
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--sand)' }}>
@@ -26,19 +28,21 @@ export default function Layout() {
         </button>
 
         <div className="flex items-center gap-3">
-          {/* Language switcher */}
+          {/* Language switcher — disabled during screening */}
           <div
             className="flex rounded-full overflow-hidden border text-xs font-medium"
-            style={{ borderColor: 'var(--sand-dark)' }}
+            style={{ borderColor: 'var(--sand-dark)', opacity: isScreening ? 0.4 : 1 }}
           >
             {['en', 'es'].map(l => (
               <button
                 key={l}
-                onClick={() => switchLang(l)}
+                onClick={() => !isScreening && switchLang(l)}
+                disabled={isScreening}
                 className="px-3 py-1 transition-all"
                 style={{
                   background: lang === l ? 'var(--sage-dark)' : 'transparent',
                   color: lang === l ? 'var(--white)' : 'var(--muted)',
+                  cursor: isScreening ? 'not-allowed' : 'pointer',
                 }}
               >
                 {l === 'en' ? 'EN' : 'ES'}
