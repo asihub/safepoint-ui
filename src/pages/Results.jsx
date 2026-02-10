@@ -1,41 +1,33 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
-import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react'
+import { useLanguage } from '../hooks/useLanguage.jsx'
 import ExportPdf from '../components/ExportPdf'
 import ExportFhir from '../components/ExportFhir'
+import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Brain, BarChart2 } from 'lucide-react'
 
 const STORAGE_KEY = 'safepoint_history'
 const MAX_ENTRIES = 30
 
-// Save result to localStorage directly — no hook dependency
 function saveToHistory(result) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw  = localStorage.getItem(STORAGE_KEY)
     const prev = raw ? JSON.parse(raw) : []
-
-    // Deduplicate — skip if same result within last 5 seconds
     if (prev.length > 0) {
       const last = prev[0]
       const diff = Date.now() - new Date(last.timestamp).getTime()
-      if (diff < 5000 &&
-          last.riskLevel === result.riskLevel &&
-          last.phq9Score === result.phq9Score &&
-          last.gad7Score === result.gad7Score) {
-        return
-      }
+      if (diff < 5000 && last.riskLevel === result.riskLevel &&
+          last.phq9Score === result.phq9Score && last.gad7Score === result.gad7Score) return
     }
-
     const entry = {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      riskLevel: result.riskLevel,
-      phq9Score: result.phq9Score,
-      gad7Score: result.gad7Score,
+      id:         Date.now(),
+      timestamp:  new Date().toISOString(),
+      riskLevel:  result.riskLevel,
+      phq9Score:  result.phq9Score,
+      gad7Score:  result.gad7Score,
       confidence: result.confidence,
-      signals: result.aiAnalysis?.signals || [],
+      signals:    result.aiAnalysis?.signals || [],
     }
-
     const updated = [entry, ...prev].slice(0, MAX_ENTRIES)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
   } catch (e) {
@@ -44,134 +36,188 @@ function saveToHistory(result) {
 }
 
 const RISK_CONFIG = {
-  LOW: {
-    color: 'var(--low)',
-    bg: '#EDF4EE',
-    icon: <CheckCircle size={24} />,
-    label: 'Low Risk',
-    message: 'Your responses suggest you are managing relatively well right now.',
-  },
-  MEDIUM: {
-    color: 'var(--medium)',
-    bg: '#FDF6E3',
-    icon: <AlertCircle size={24} />,
-    label: 'Moderate Risk',
-    message: 'Your responses suggest you may benefit from speaking with a mental health professional.',
-  },
-  HIGH: {
-    color: 'var(--high)',
-    bg: '#FDECEA',
-    icon: <AlertTriangle size={24} />,
-    label: 'High Risk',
-    message: 'Your responses suggest you may need immediate support. Please reach out now.',
-  },
+  LOW:    { color: 'var(--low)',    bg: '#EDF4EE', icon: <CheckCircle size={24} />,  label: 'lowRisk',    msg: 'lowRiskMsg' },
+  MEDIUM: { color: 'var(--medium)', bg: '#FDF6E3', icon: <AlertCircle size={24} />,  label: 'mediumRisk', msg: 'mediumRiskMsg' },
+  HIGH:   { color: 'var(--high)',   bg: '#FDECEA', icon: <AlertTriangle size={24} />, label: 'highRisk',   msg: 'highRiskMsg' },
 }
 
+const RISK_COLOR = { LOW: 'var(--low)', MEDIUM: 'var(--medium)', HIGH: 'var(--high)' }
+
 export default function Results() {
-  const navigate = useNavigate()
+  const navigate   = useNavigate()
   const { assessment } = useAssessmentContext()
-  const result = assessment.result
+  const { t }      = useLanguage()
+  const result     = assessment.result
 
-  // Save to history once on mount
-  useEffect(() => {
-    if (result) saveToHistory(result)
-  }, [])
+  useEffect(() => { if (result) saveToHistory(result) }, [])
 
-  if (!result) {
-    navigate('/')
-    return null
-  }
+  if (!result) { navigate('/'); return null }
 
   const config = RISK_CONFIG[result.riskLevel] || RISK_CONFIG.LOW
+
+  // Combined score — numeric representation 0–100
+  const combinedScore = computeCombinedScore(result)
 
   return (
     <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-6 py-8">
 
       {/* Risk badge */}
-      <div
-        className="rounded-2xl p-5 mb-6 flex items-start gap-4"
-        style={{ background: config.bg, color: config.color }}
-      >
+      <div className="rounded-2xl p-5 mb-6 flex items-start gap-4"
+        style={{ background: config.bg, color: config.color }}>
         <div className="mt-0.5">{config.icon}</div>
         <div>
-          <div className="font-semibold text-lg mb-1">{config.label}</div>
+          <div className="font-semibold text-lg mb-1">{t(config.label)}</div>
           <div className="text-sm" style={{ color: 'var(--charcoal)', opacity: 0.8 }}>
-            {config.message}
+            {t(config.msg)}
           </div>
         </div>
       </div>
 
       {/* 988 CTA */}
       {result.show988 && (
-        <a
-          href="tel:988"
+        <a href="tel:988"
           className="flex items-center justify-center gap-3 py-4 rounded-2xl mb-6 font-semibold text-white"
-          style={{ background: 'var(--high)' }}
-        >
-          <Phone size={20} />
-          Call or Text 988 Now
+          style={{ background: 'var(--high)' }}>
+          <Phone size={20} /> {t('callOrText988Now')}
         </a>
       )}
 
-      {/* Scores */}
+      {/* ── Questionnaire scores ── */}
       <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
-        <h3 className="font-semibold mb-4" style={{ color: 'var(--charcoal)' }}>
-          Questionnaire scores
-        </h3>
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart2 size={16} style={{ color: 'var(--muted)' }} />
+          <h3 className="font-semibold" style={{ color: 'var(--charcoal)' }}>
+            {t('questionnaireScores')}
+          </h3>
+        </div>
         <div className="flex flex-col gap-3">
           {result.phq9Score != null && (
             <ScoreRow label="PHQ-9 (Depression)" score={result.phq9Score} max={27}
-              severity={result.phq9Score >= 20 ? 'severe' : result.phq9Score >= 10 ? 'moderate' : 'mild'} />
+              severity={result.phq9Score >= 20 ? t('severe') : result.phq9Score >= 10 ? t('moderate') : t('mild')}
+              color={result.phq9Score >= 20 ? 'var(--high)' : result.phq9Score >= 10 ? 'var(--medium)' : 'var(--low)'}
+              percent={Math.round((result.phq9Score / 27) * 100)}
+            />
           )}
           {result.gad7Score != null && (
             <ScoreRow label="GAD-7 (Anxiety)" score={result.gad7Score} max={21}
-              severity={result.gad7Score >= 15 ? 'severe' : result.gad7Score >= 10 ? 'moderate' : 'mild'} />
+              severity={result.gad7Score >= 15 ? t('severe') : result.gad7Score >= 10 ? t('moderate') : t('mild')}
+              color={result.gad7Score >= 15 ? 'var(--high)' : result.gad7Score >= 10 ? 'var(--medium)' : 'var(--low)'}
+              percent={Math.round((result.gad7Score / 21) * 100)}
+            />
           )}
         </div>
       </div>
 
-      {/* AI signals */}
-      {result.aiAnalysis?.signals?.length > 0 && (
+      {/* ── AI Text score ── */}
+      {result.aiAnalysis && (
         <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
-          <h3 className="font-semibold mb-3" style={{ color: 'var(--charcoal)' }}>
-            Signals detected in your text
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {result.aiAnalysis.signals.map(s => (
-              <span
-                key={s}
-                className="text-xs px-3 py-1 rounded-full"
-                style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}
-              >
-                {s.replace(/_/g, ' ')}
-              </span>
-            ))}
+          <div className="flex items-center gap-2 mb-4">
+            <Brain size={16} style={{ color: 'var(--muted)' }} />
+            <h3 className="font-semibold" style={{ color: 'var(--charcoal)' }}>
+              AI Text Analysis
+            </h3>
           </div>
+          <div className="flex flex-col gap-3">
+            <ScoreRow
+              label="Risk level from text"
+              score={null}
+              scoreLabel={result.aiAnalysis.riskLevel}
+              percent={Math.round(result.aiAnalysis.confidence * 100)}
+              color={RISK_COLOR[result.aiAnalysis.riskLevel] || 'var(--muted)'}
+              severity={`${Math.round(result.aiAnalysis.confidence * 100)}% confidence`}
+            />
+            {/* Per-class scores */}
+            <div className="flex gap-2 mt-1">
+              {['low', 'medium', 'high'].map(level => (
+                <div key={level} className="flex-1">
+                  <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--muted)' }}>
+                    <span className="capitalize">{level}</span>
+                    <span>{Math.round((result.aiAnalysis.scores?.[level] || 0) * 100)}%</span>
+                  </div>
+                  <div className="h-1 rounded-full" style={{ background: 'var(--sand-dark)' }}>
+                    <div className="h-full rounded-full"
+                      style={{
+                        width:      `${Math.round((result.aiAnalysis.scores?.[level] || 0) * 100)}%`,
+                        background: RISK_COLOR[level.toUpperCase()],
+                      }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Signals */}
+          {result.aiAnalysis.signals?.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
+                {t('signalsDetected')}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {result.aiAnalysis.signals.map(s => (
+                  <span key={s} className="text-xs px-3 py-1 rounded-full"
+                    style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}>
+                    {s.replace(/_/g, ' ')}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
+      {/* ── Combined score ── */}
+      <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--white)' }}>
+        <div className="flex items-center gap-2 mb-4">
+          <CheckCircle size={16} style={{ color: 'var(--muted)' }} />
+          <h3 className="font-semibold" style={{ color: 'var(--charcoal)' }}>
+            Combined Assessment
+          </h3>
+        </div>
+
+        {/* Combined score bar */}
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex-1">
+            <div className="h-3 rounded-full overflow-hidden" style={{ background: 'var(--sand-dark)' }}>
+              <div className="h-full rounded-full transition-all"
+                style={{ width: `${combinedScore}%`, background: config.color }} />
+            </div>
+          </div>
+          <span className="font-bold text-lg" style={{ color: config.color, minWidth: 48 }}>
+            {combinedScore}
+            <span className="text-xs font-normal" style={{ color: 'var(--muted)' }}>/100</span>
+          </span>
+        </div>
+
+        {/* How it was computed */}
+        <div className="text-xs" style={{ color: 'var(--muted)' }}>
+          <p className="mb-1">
+            <span className="font-medium">Sources: </span>
+            {[
+              result.phq9Score != null && `PHQ-9 (${result.phq9Score}/27)`,
+              result.gad7Score != null && `GAD-7 (${result.gad7Score}/21)`,
+              result.aiAnalysis && `AI text (${Math.round(result.aiAnalysis.confidence * 100)}%)`,
+            ].filter(Boolean).join(' + ')}
+          </p>
+          <p>{result.explanation}</p>
+        </div>
+      </div>
+
       {/* Actions */}
-      <div className="flex flex-col gap-3 mt-2">
-        <button
-          onClick={() => navigate('/resources')}
+      <div className="flex flex-col gap-3">
+        <button onClick={() => navigate('/resources')}
           className="flex items-center justify-center gap-2 py-3 rounded-xl font-medium"
-          style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}
-        >
-          <MapPin size={18} /> Find support near me
+          style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
+          <MapPin size={18} /> {t('findSupportNearMe')}
         </button>
-        <button
-          onClick={() => navigate('/safety-plan')}
+        <button onClick={() => navigate('/safety-plan')}
           className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium"
-          style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}
-        >
-          <FileText size={18} /> Build my safety plan
+          style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}>
+          <FileText size={18} /> {t('buildMySafetyPlan')}
         </button>
-        <button
-          onClick={() => navigate('/progress')}
+        <button onClick={() => navigate('/progress')}
           className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium"
-          style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}
-        >
-          <TrendingUp size={18} /> Track my progress
+          style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}>
+          <TrendingUp size={18} /> {t('trackMyProgress')}
         </button>
         <ExportPdf result={result} />
         <ExportFhir result={result} />
@@ -180,23 +226,46 @@ export default function Results() {
   )
 }
 
-function ScoreRow({ label, score, max, severity }) {
-  const color = severity === 'severe' ? 'var(--high)'
-              : severity === 'moderate' ? 'var(--medium)'
-              : 'var(--low)'
+/**
+ * Computes a combined 0–100 score from all available signals.
+ * PHQ-9 contributes 40%, GAD-7 contributes 30%, AI confidence contributes 30%.
+ */
+function computeCombinedScore(result) {
+  let total = 0
+  let weight = 0
+
+  if (result.phq9Score != null) {
+    total  += (result.phq9Score / 27) * 40
+    weight += 40
+  }
+  if (result.gad7Score != null) {
+    total  += (result.gad7Score / 21) * 30
+    weight += 30
+  }
+  if (result.aiAnalysis) {
+    // Map risk level to a 0–1 value weighted by confidence
+    const riskVal = { LOW: 0.2, MEDIUM: 0.55, HIGH: 0.9 }[result.aiAnalysis.riskLevel] || 0.2
+    total  += riskVal * result.aiAnalysis.confidence * 30
+    weight += 30
+  }
+
+  if (weight === 0) return 0
+  // Normalize to available weight
+  return Math.min(100, Math.round((total / weight) * 100))
+}
+
+function ScoreRow({ label, score, max, scoreLabel, percent, color, severity }) {
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
         <span style={{ color: 'var(--charcoal)' }}>{label}</span>
         <span className="font-semibold" style={{ color }}>
-          {score}/{max} — {severity}
+          {score != null ? `${score}/${max} — ` : ''}{severity}
         </span>
       </div>
       <div className="h-1.5 rounded-full" style={{ background: 'var(--sand-dark)' }}>
-        <div
-          className="h-full rounded-full"
-          style={{ width: `${(score / max) * 100}%`, background: color }}
-        />
+        <div className="h-full rounded-full transition-all"
+          style={{ width: `${percent}%`, background: color }} />
       </div>
     </div>
   )
