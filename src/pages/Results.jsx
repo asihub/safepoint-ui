@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage.jsx'
 import ExportPdf from '../components/ExportPdf'
+import WellnessResources from '../components/WellnessResources'
 import ExportFhir from '../components/ExportFhir'
 import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Brain, BarChart2 } from 'lucide-react'
 
@@ -201,6 +202,14 @@ export default function Results() {
           <p>{result.explanation}</p>
         </div>
       </div>
+
+      {/* Wellness resources — shown for LOW risk only */}
+      {result.riskLevel === 'LOW' && (
+        <WellnessResources
+          phq9Score={result.phq9Score}
+          gad7Score={result.gad7Score}
+        />
+      )}
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
