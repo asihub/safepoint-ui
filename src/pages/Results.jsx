@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage.jsx'
@@ -97,6 +97,7 @@ export default function Results() {
               severity={result.phq9Score >= 20 ? t('severe') : result.phq9Score >= 10 ? t('moderate') : t('mild')}
               color={result.phq9Score >= 20 ? 'var(--high)' : result.phq9Score >= 10 ? 'var(--medium)' : 'var(--low)'}
               percent={Math.round((result.phq9Score / 27) * 100)}
+              tooltip={`Your score: ${result.phq9Score} / 27. Ranges: 0–4 minimal, 5–9 mild, 10–14 moderate, 15–19 moderately severe, 20–27 severe.`}
             />
           )}
           {result.gad7Score != null && (
@@ -104,6 +105,7 @@ export default function Results() {
               severity={result.gad7Score >= 15 ? t('severe') : result.gad7Score >= 10 ? t('moderate') : t('mild')}
               color={result.gad7Score >= 15 ? 'var(--high)' : result.gad7Score >= 10 ? 'var(--medium)' : 'var(--low)'}
               percent={Math.round((result.gad7Score / 21) * 100)}
+              tooltip={`Your score: ${result.gad7Score} / 21. Ranges: 0–4 minimal, 5–9 mild, 10–14 moderate, 15–21 severe.`}
             />
           )}
         </div>
@@ -263,13 +265,38 @@ function computeCombinedScore(result) {
   return Math.min(100, Math.round((total / weight) * 100))
 }
 
-function ScoreRow({ label, score, max, scoreLabel, percent, color, severity }) {
+function ScoreRow({ label, score, max, percent, color, severity, tooltip }) {
+  const [open, setOpen] = useState(false)
   return (
     <div>
-      <div className="flex justify-between text-sm mb-1">
+      <div className="flex justify-between text-sm mb-1 items-center">
         <span style={{ color: 'var(--charcoal)' }}>{label}</span>
-        <span className="font-semibold" style={{ color }}>
-          {score != null ? `${score}/${max} — ` : ''}{severity}
+        <span className="flex items-center gap-1.5">
+          <span className="font-semibold" style={{ color }}>
+            {score != null ? `${score}/${max} — ` : ''}{severity}
+          </span>
+          {tooltip && (
+            <span className="relative">
+              <button
+                onClick={() => setOpen(o => !o)}
+                className="w-4 h-4 rounded-full text-xs flex items-center justify-center leading-none flex-shrink-0"
+                style={{ background: 'var(--sand-dark)', color: 'var(--muted)', fontWeight: 700, border: '1px solid var(--muted)' }}>
+                ?
+              </button>
+              {open && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+                  <span
+                    className="absolute right-0 bottom-full mb-2 z-20 text-xs font-normal rounded-xl px-3 py-2.5 w-60 text-left shadow-lg"
+                    style={{ background: 'var(--charcoal)', color: 'var(--white)', lineHeight: 1.6 }}>
+                    {tooltip}
+                    <span className="absolute right-2 top-full w-0 h-0"
+                      style={{ borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid var(--charcoal)' }} />
+                  </span>
+                </>
+              )}
+            </span>
+          )}
         </span>
       </div>
       <div className="h-1.5 rounded-full" style={{ background: 'var(--sand-dark)' }}>
