@@ -128,6 +128,7 @@ export default function Results() {
               percent={Math.round(result.aiAnalysis.confidence * 100)}
               color={RISK_COLOR[result.aiAnalysis.riskLevel] || 'var(--muted)'}
               severity={`${Math.round(result.aiAnalysis.confidence * 100)}% confidence`}
+              tooltip={`A fine-tuned DistilBERT model analyzed your free text and classified it as ${result.aiAnalysis.riskLevel} risk with ${Math.round(result.aiAnalysis.confidence * 100)}% confidence. The bar shows how certain the model is — higher confidence means the text more clearly matched patterns from the training data. This is one of three signals used in the final assessment.`}
             />
             {/* Per-class scores */}
             <div className="flex gap-2 mt-1">
