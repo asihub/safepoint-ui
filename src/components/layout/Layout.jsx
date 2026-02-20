@@ -9,6 +9,8 @@ export default function Layout() {
   const isHome = location.pathname === '/'
   // Disable language switcher during screening to prevent mid-questionnaire language change
   const isScreening = location.pathname === '/screening'
+  // Show back-to-results button on secondary pages
+  const showBackToResults = ['/resources', '/safety-plan', '/progress', '/auth'].includes(location.pathname)
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--sand)' }}>
@@ -26,6 +28,15 @@ export default function Layout() {
             {t('appName')}
           </span>
         </button>
+
+        {showBackToResults && (
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-full border transition-colors hover:opacity-80"
+            style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)', fontSize: '0.8rem' }}>
+            ← Results
+          </button>
+        )}
 
         <div className="flex items-center gap-3">
           {/* Language switcher — disabled during screening */}
