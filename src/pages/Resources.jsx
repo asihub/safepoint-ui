@@ -1,28 +1,40 @@
 import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { useAssessmentContext } from '../App'
+import { useLanguage } from '../hooks/useLanguage.jsx'
 import { getFacilities } from '../api/client'
 import { MapPin, Phone, Loader2, Search } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
-// Fix Leaflet default marker icon (broken in Vite by default)
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
+
+// Distance options — label and value in meters (SAMHSA limitValue)
+const DISTANCE_OPTIONS = [
+  { label: '5 miles',  miles: 5,  meters: 8047  },
+  { label: '10 miles', miles: 10, meters: 16093 },
+  { label: '25 miles', miles: 25, meters: 40234 },
+  { label: '50 miles', miles: 50, meters: 80467 },
+]
 
 export default function Resources() {
   const { assessment } = useAssessmentContext()
-  const [facilities, setFacilities] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [location, setLocation] = useState(assessment.location)
-  const [zip, setZip] = useState('')
-  const [locationLabel, setLocationLabel] = useState(null)
-  const [showMap, setShowMap] = useState(true)
+  const { t }          = useLanguage()
+
+  const [facilities,     setFacilities]     = useState([])
+  const [loading,        setLoading]        = useState(false)
+  const [error,          setError]          = useState(null)
+  const [location,       setLocation]       = useState(assessment.location)
+  const [zip,            setZip]            = useState('')
+  const [locationLabel,  setLocationLabel]  = useState(null)
+  const [distanceIdx,    setDistanceIdx]    = useState(1) // default 10 miles
+
+  const distance = DISTANCE_OPTIONS[distanceIdx]
 
   // Try geolocation on mount
   useEffect(() => {
@@ -37,39 +49,30 @@ export default function Resources() {
     }
   }, [])
 
-  // Fetch facilities when location is available
+  // Fetch facilities when location or distance changes
   useEffect(() => {
     if (!location) return
     setLoading(true)
     setError(null)
-    getFacilities(location.latitude, location.longitude, assessment.insuranceType)
+    getFacilities(location.latitude, location.longitude, assessment.insuranceType, 25, distance.meters)
       .then(data => setFacilities(data))
       .catch(() => setError('fetch_failed'))
       .finally(() => setLoading(false))
-  }, [location])
+  }, [location, distanceIdx])
 
   const handleZipSearch = async () => {
     const clean = zip.trim()
-    if (!/^\d{5}$/.test(clean)) {
-      setError('invalid_zip')
-      return
-    }
+    if (!/^\d{5}$/.test(clean)) { setError('invalid_zip'); return }
     setLoading(true)
     setError(null)
     try {
-      // Use Nominatim (OpenStreetMap) for accurate ZIP geocoding — free, no API key
-      const res = await fetch(
+      const res  = await fetch(
         `https://nominatim.openstreetmap.org/search?postalcode=${clean}&country=US&format=json&limit=1`,
         { headers: { 'Accept-Language': 'en' } }
       )
       const data = await res.json()
-      if (data.length === 0) {
-        setError('zip_not_found')
-        setLoading(false)
-        return
-      }
+      if (data.length === 0) { setError('zip_not_found'); setLoading(false); return }
       const { lat, lon, display_name } = data[0]
-      // Extract city/state from display_name
       const parts = display_name.split(', ')
       const label = parts.length >= 2 ? `${parts[0]}, ${parts[1]}` : `ZIP ${clean}`
       setLocation({ latitude: parseFloat(lat), longitude: parseFloat(lon) })
@@ -81,50 +84,41 @@ export default function Resources() {
     }
   }
 
-  const mapCenter = location
-    ? [location.latitude, location.longitude]
-    : [39.5, -98.35]
+  const mapCenter = location ? [location.latitude, location.longitude] : [39.5, -98.35]
 
   return (
     <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-6 py-8">
-      <h2
-        className="mb-2"
-        style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}
-      >
-        Support near you
+      <h2 className="mb-2" style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
+        {t('supportNearYou')}
       </h2>
       <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
-        Mental health treatment facilities in your area.
+        {t('resourcesSubtitle')}
         {assessment.insuranceType && assessment.insuranceType !== 'UNKNOWN' &&
           ` Filtered for ${assessment.insuranceType.toLowerCase()} insurance.`}
       </p>
 
-      {/* 988 — always shown */}
-      <a
-        href="tel:988"
+      {/* 988 */}
+      <a href="tel:988"
         className="flex items-center gap-3 px-4 py-4 rounded-2xl mb-4 font-medium"
-        style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}
-      >
+        style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
         <Phone size={20} />
         <div>
-          <div className="font-semibold">988 Suicide & Crisis Lifeline</div>
-          <div className="text-xs" style={{ opacity: 0.75 }}>
-            Free, confidential — call or text 988
-          </div>
+          <div className="font-semibold">{t('crisis988Title')}</div>
+          <div className="text-xs" style={{ opacity: 0.75 }}>{t('crisis988Subtitle')}</div>
         </div>
       </a>
 
-      {/* ZIP code input */}
-      <div
-        className="rounded-2xl p-4 mb-4"
-        style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}
-      >
+      {/* ZIP + Distance filter */}
+      <div className="rounded-2xl p-4 mb-4"
+        style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}>
         <p className="text-sm font-medium mb-3" style={{ color: 'var(--charcoal)' }}>
           {location && error !== 'location_denied'
-            ? `Showing results near ${locationLabel || 'your location'}`
-            : 'Enter your ZIP code to find nearby facilities'}
+            ? `${t('showingResultsNear')} ${locationLabel || 'your location'}`
+            : t('enterZip')}
         </p>
-        <div className="flex gap-2">
+
+        {/* ZIP input row */}
+        <div className="flex gap-2 mb-3">
           <input
             value={zip}
             onChange={e => setZip(e.target.value)}
@@ -137,14 +131,45 @@ export default function Resources() {
           <button
             onClick={handleZipSearch}
             className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium"
-            style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}
-          >
-            <Search size={16} /> Search
+            style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
+            <Search size={16} /> {t('search')}
           </button>
         </div>
+
+        {/* Distance filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium" style={{ color: 'var(--muted)', flexShrink: 0 }}>
+            Within:
+          </span>
+          <div className="flex gap-1.5 flex-wrap">
+            {DISTANCE_OPTIONS.map((opt, i) => (
+              <button key={i} onClick={() => setDistanceIdx(i)}
+                className="text-xs px-3 py-1 rounded-full border transition-all"
+                style={{
+                  background:   distanceIdx === i ? 'var(--sage-dark)' : 'transparent',
+                  color:        distanceIdx === i ? 'var(--white)'     : 'var(--muted)',
+                  borderColor:  distanceIdx === i ? 'var(--sage-dark)' : 'var(--sand-dark)',
+                  fontWeight:   distanceIdx === i ? 600 : 400,
+                }}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {error === 'invalid_zip' && (
           <p className="text-xs mt-2" style={{ color: 'var(--high)' }}>
-            Please enter a valid 5-digit ZIP code.
+            {t('invalidZip')}
+          </p>
+        )}
+        {error === 'zip_not_found' && (
+          <p className="text-xs mt-2" style={{ color: 'var(--high)' }}>
+            {t('zipNotFound')}
+          </p>
+        )}
+        {error === 'geocode_failed' && (
+          <p className="text-xs mt-2" style={{ color: 'var(--high)' }}>
+            {t('geocodeFailed')}
           </p>
         )}
       </div>
@@ -152,21 +177,15 @@ export default function Resources() {
       {/* Map */}
       {location && (
         <div className="rounded-2xl overflow-hidden mb-4" style={{ height: 280 }}>
-          <MapContainer key={`${location.latitude}-${location.longitude}`}
-            center={mapCenter}
-            zoom={11}
+          <MapContainer
+            key={`${location.latitude}-${location.longitude}-${distanceIdx}`}
+            center={mapCenter} zoom={distanceIdx <= 1 ? 11 : distanceIdx === 2 ? 10 : 9}
             style={{ height: '100%', width: '100%' }}
-            scrollWheelZoom={false}
-          >
+            scrollWheelZoom={false}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {/* User location marker */}
-            <Marker position={mapCenter}>
-              <Popup>Your location</Popup>
-            </Marker>
-            {/* Facility markers */}
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <Marker position={mapCenter}><Popup>Your location</Popup></Marker>
             {facilities.map((f, i) => {
               const lat = parseFloat(f.latitude)
               const lng = parseFloat(f.longitude)
@@ -176,8 +195,8 @@ export default function Resources() {
                   <Popup>
                     <strong>{f.name1 || f.name}</strong>
                     {f.street1 && <><br />{f.street1}</>}
-                    {f.city && <><br />{f.city}, {f.state}</>}
-                    {f.phone && <><br /><a href={`tel:${f.phone}`}>{f.phone}</a></>}
+                    {f.city    && <><br />{f.city}, {f.state}</>}
+                    {f.phone   && <><br /><a href={`tel:${f.phone}`}>{f.phone}</a></>}
                   </Popup>
                 </Marker>
               )
@@ -190,29 +209,27 @@ export default function Resources() {
       {loading && (
         <div className="flex items-center justify-center py-8" style={{ color: 'var(--muted)' }}>
           <Loader2 size={20} className="animate-spin mr-2" />
-          Finding facilities near you...
+          {t('findingFacilities')}
         </div>
       )}
 
-      {/* Fetch error */}
-      {error === 'fetch_failed' && (
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#FDECEA', color: 'var(--high)' }}>
-          <p className="text-sm">Could not load facilities. Please try again.</p>
-        </div>
+      {/* Results count */}
+      {!loading && facilities.length > 0 && (
+        <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>
+          {facilities.length} facilities found within {distance.label}
+        </p>
       )}
 
       {/* No results */}
       {!loading && !error && facilities.length === 0 && location && (
         <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
-          No facilities found nearby. Try a different ZIP code or insurance filter.
+          {t('noFacilities')}
         </p>
       )}
 
       {/* Facility list */}
       <div className="flex flex-col gap-3">
-        {facilities.map((f, i) => (
-          <FacilityCard key={i} facility={f} />
-        ))}
+        {facilities.map((f, i) => <FacilityCard key={i} facility={f} />)}
       </div>
     </div>
   )
@@ -221,33 +238,24 @@ export default function Resources() {
 function FacilityCard({ facility }) {
   const name    = facility.name1 || facility.name || 'Mental Health Facility'
   const street  = facility.street1 || ''
-  const city    = facility.city || ''
-  const state   = facility.state || ''
+  const city    = facility.city    || ''
+  const state   = facility.state   || ''
   const address = [street, city, state].filter(Boolean).join(', ')
   const phone   = facility.phone
 
   return (
-    <div
-      className="rounded-2xl p-4"
-      style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}
-    >
-      <div className="font-semibold text-sm mb-2" style={{ color: 'var(--charcoal)' }}>
-        {name}
-      </div>
+    <div className="rounded-2xl p-4"
+      style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}>
+      <div className="font-semibold text-sm mb-2" style={{ color: 'var(--charcoal)' }}>{name}</div>
       {address && (
         <div className="flex items-start gap-2 text-xs mb-2" style={{ color: 'var(--muted)' }}>
-          <MapPin size={13} className="mt-0.5 flex-shrink-0" />
-          <span>{address}</span>
+          <MapPin size={13} className="mt-0.5 flex-shrink-0" /><span>{address}</span>
         </div>
       )}
       {phone && (
-        <a
-          href={`tel:${phone}`}
-          className="flex items-center gap-2 text-xs font-medium"
-          style={{ color: 'var(--sage-dark)' }}
-        >
-          <Phone size={13} />
-          {phone}
+        <a href={`tel:${phone}`} className="flex items-center gap-2 text-xs font-medium"
+          style={{ color: 'var(--sage-dark)' }}>
+          <Phone size={13} />{phone}
         </a>
       )}
     </div>

@@ -12,9 +12,9 @@ export const analyzeRisk = (payload) =>
   client.post('/analysis', payload).then(r => r.data)
 
 // Resources API
-export const getFacilities = (lat, lng, insurance = 'UNKNOWN', limit = 10) =>
+export const getFacilities = (lat, lng, insurance = 'UNKNOWN', limit = 25, radiusMeters = 16093) =>
   client.get('/resources/facilities', {
-    params: { latitude: lat, longitude: lng, insurance, limit }
+    params: { latitude: lat, longitude: lng, insurance, limit, radiusMeters }
   }).then(r => r.data)
 
 // Safety Plan API
