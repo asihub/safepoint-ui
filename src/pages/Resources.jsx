@@ -176,7 +176,7 @@ export default function Resources() {
 
       {/* Map */}
       {location && (
-        <div className="rounded-2xl overflow-hidden mb-4" style={{ height: 280 }}>
+        <div className="rounded-2xl overflow-hidden mb-4" style={{ aspectRatio: "1 / 1", width: "100%" }}>
           <MapContainer
             key={`${location.latitude}-${location.longitude}-${distanceIdx}`}
             center={mapCenter} zoom={distanceIdx <= 1 ? 11 : distanceIdx === 2 ? 10 : 9}
