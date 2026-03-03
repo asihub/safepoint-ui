@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { useState, useEffect, useRef } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage.jsx'
 import { getFacilities } from '../api/client'
@@ -22,6 +22,41 @@ const DISTANCE_OPTIONS = [
   { label: '50 miles', miles: 50, meters: 80467 },
 ]
 
+
+/**
+ * Updates map center/zoom without remounting.
+ * Only changes zoom when distance filter changes — preserves user's manual zoom otherwise.
+ */
+function MapUpdater({ center, zoom, distanceChanged }) {
+  const map = useMap()
+  const prevDistanceChanged = useRef(false)
+
+  useEffect(() => {
+    if (distanceChanged) {
+      // Distance changed — update center AND zoom
+      map.flyTo(center, zoom, { duration: 0.5 })
+    } else {
+      // Only center changed (new ZIP) — keep current zoom
+      map.panTo(center, { duration: 0.5 })
+    }
+  }, [center[0], center[1], distanceChanged])
+
+  return null
+}
+
+/**
+ * Tracks whether distanceIdx changed to decide whether to update zoom.
+ */
+function MapUpdaterController({ center, distanceIdx }) {
+  const prevIdx  = useRef(distanceIdx)
+  const zoom     = distanceIdx <= 1 ? 11 : distanceIdx === 2 ? 10 : 9
+  const changed  = prevIdx.current !== distanceIdx
+
+  useEffect(() => { prevIdx.current = distanceIdx }, [distanceIdx])
+
+  return <MapUpdater center={center} zoom={zoom} distanceChanged={changed} />
+}
+
 export default function Resources() {
   const { assessment } = useAssessmentContext()
   const { t }          = useLanguage()
@@ -33,6 +68,8 @@ export default function Resources() {
   const [zip,            setZip]            = useState('')
   const [locationLabel,  setLocationLabel]  = useState(null)
   const [distanceIdx,    setDistanceIdx]    = useState(1) // default 10 miles
+  const [page,           setPage]           = useState(1)
+  const PAGE_SIZE = 10
 
   const distance = DISTANCE_OPTIONS[distanceIdx]
 
@@ -54,11 +91,11 @@ export default function Resources() {
     if (!location) return
     setLoading(true)
     setError(null)
-    getFacilities(location.latitude, location.longitude, assessment.insuranceType, 25, distance.meters)
+    getFacilities(location.latitude, location.longitude, assessment.insuranceType, 200, distance.meters)
       .then(data => setFacilities(data))
       .catch(() => setError('fetch_failed'))
       .finally(() => setLoading(false))
-  }, [location, distanceIdx])
+  }, [location?.latitude, location?.longitude, distanceIdx])
 
   const handleZipSearch = async () => {
     const clean = zip.trim()
@@ -84,7 +121,9 @@ export default function Resources() {
     }
   }
 
-  const mapCenter = location ? [location.latitude, location.longitude] : [39.5, -98.35]
+  const mapCenter  = location ? [location.latitude, location.longitude] : [39.5, -98.35]
+  const totalPages = Math.ceil(facilities.length / PAGE_SIZE)
+  const paginated  = facilities.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-6 py-8">
@@ -178,10 +217,15 @@ export default function Resources() {
       {location && (
         <div className="rounded-2xl overflow-hidden mb-4" style={{ aspectRatio: "1 / 1", width: "100%" }}>
           <MapContainer
-            key={`${location.latitude}-${location.longitude}-${distanceIdx}`}
-            center={mapCenter} zoom={distanceIdx <= 1 ? 11 : distanceIdx === 2 ? 10 : 9}
+            key={`${location.latitude}-${location.longitude}`}
+            center={mapCenter}
+            zoom={distanceIdx <= 1 ? 11 : distanceIdx === 2 ? 10 : 9}
             style={{ height: '100%', width: '100%' }}
             scrollWheelZoom={false}>
+            <MapUpdaterController
+              center={mapCenter}
+              distanceIdx={distanceIdx}
+            />
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -214,23 +258,52 @@ export default function Resources() {
       )}
 
       {/* Results count */}
-      {!loading && facilities.length > 0 && (
+      {!loading && location && (
         <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>
-          {facilities.length} facilities found within {distance.label}
+          {facilities.length > 0
+            ? `${facilities.length} facilit${facilities.length === 1 ? 'y' : 'ies'} found within ${distance.label}`
+            : `No facilities found within ${distance.label} — try a larger radius`}
         </p>
       )}
 
-      {/* No results */}
-      {!loading && !error && facilities.length === 0 && location && (
-        <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
-          {t('noFacilities')}
-        </p>
-      )}
+
 
       {/* Facility list */}
       <div className="flex flex-col gap-3">
-        {facilities.map((f, i) => <FacilityCard key={i} facility={f} />)}
+        {paginated.map((f, i) => <FacilityCard key={(page-1)*PAGE_SIZE+i} facility={f} />)}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 pt-4"
+          style={{ borderTop: '1px solid var(--sand-dark)' }}>
+          <button
+            onClick={() => { setPage(p => Math.max(1, p-1)); window.scrollTo(0,0) }}
+            disabled={page === 1}
+            className="px-4 py-2 rounded-xl text-sm font-medium border transition-all"
+            style={{
+              borderColor: 'var(--sand-dark)',
+              color: page === 1 ? 'var(--sand-dark)' : 'var(--charcoal)',
+              opacity: page === 1 ? 0.4 : 1,
+            }}>
+            ← Previous
+          </button>
+          <span className="text-sm" style={{ color: 'var(--muted)' }}>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => { setPage(p => Math.min(totalPages, p+1)); window.scrollTo(0,0) }}
+            disabled={page === totalPages}
+            className="px-4 py-2 rounded-xl text-sm font-medium border transition-all"
+            style={{
+              borderColor: 'var(--sand-dark)',
+              color: page === totalPages ? 'var(--sand-dark)' : 'var(--charcoal)',
+              opacity: page === totalPages ? 0.4 : 1,
+            }}>
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   )
 }
