@@ -213,6 +213,15 @@ export default function Resources() {
         )}
       </div>
 
+      {/* Results count — above map */}
+      {!loading && location && (
+        <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>
+          {facilities.length > 0
+            ? `${facilities.length} facilit${facilities.length === 1 ? 'y' : 'ies'} within ${distance.label}`
+            : `No facilities within ${distance.label} — try a larger radius`}
+        </p>
+      )}
+
       {/* Map */}
       {location && (
         <div className="rounded-2xl overflow-hidden mb-4" style={{ aspectRatio: "1 / 1", width: "100%" }}>
@@ -257,44 +266,31 @@ export default function Resources() {
         </div>
       )}
 
-      {/* Results count */}
-      {!loading && location && (
-        <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>
-          {facilities.length > 0
-            ? `${facilities.length} facilit${facilities.length === 1 ? 'y' : 'ies'} found within ${distance.label}`
-            : `No facilities found within ${distance.label} — try a larger radius`}
-        </p>
-      )}
 
 
 
-      {/* Facility list */}
-      <div className="flex flex-col gap-3">
-        {paginated.map((f, i) => <FacilityCard key={(page-1)*PAGE_SIZE+i} facility={f} />)}
-      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4 pt-4"
-          style={{ borderTop: '1px solid var(--sand-dark)' }}>
+      {/* Pagination — above facility list */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between mb-2 mt-2">
           <button
             onClick={() => { setPage(p => Math.max(1, p-1)); window.scrollTo(0,0) }}
             disabled={page === 1}
-            className="px-4 py-2 rounded-xl text-sm font-medium border transition-all"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
             style={{
               borderColor: 'var(--sand-dark)',
               color: page === 1 ? 'var(--sand-dark)' : 'var(--charcoal)',
               opacity: page === 1 ? 0.4 : 1,
             }}>
-            ← Previous
+            ← Prev
           </button>
-          <span className="text-sm" style={{ color: 'var(--muted)' }}>
+          <span className="text-xs" style={{ color: 'var(--muted)' }}>
             Page {page} of {totalPages}
           </span>
           <button
             onClick={() => { setPage(p => Math.min(totalPages, p+1)); window.scrollTo(0,0) }}
             disabled={page === totalPages}
-            className="px-4 py-2 rounded-xl text-sm font-medium border transition-all"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
             style={{
               borderColor: 'var(--sand-dark)',
               color: page === totalPages ? 'var(--sand-dark)' : 'var(--charcoal)',
@@ -304,6 +300,13 @@ export default function Resources() {
           </button>
         </div>
       )}
+
+      {/* Facility list */}
+      <div className="flex flex-col gap-3">
+        {paginated.map((f, i) => <FacilityCard key={(page-1)*PAGE_SIZE+i} facility={f} />)}
+      </div>
+
+
     </div>
   )
 }
