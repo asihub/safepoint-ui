@@ -68,6 +68,12 @@ export default function Resources() {
   const [zip,            setZip]            = useState('')
   const [locationLabel,  setLocationLabel]  = useState(null)
   const [distanceIdx,    setDistanceIdx]    = useState(1) // default 10 miles
+  const [insurance,      setInsurance]      = useState(
+    assessment.insuranceType && assessment.insuranceType !== 'UNKNOWN'
+      ? assessment.insuranceType
+      : 'UNKNOWN'
+  )
+  const [serviceType,    setServiceType]    = useState('mh')
   const [page,           setPage]           = useState(1)
   const PAGE_SIZE = 10
 
@@ -91,11 +97,15 @@ export default function Resources() {
     if (!location) return
     setLoading(true)
     setError(null)
-    getFacilities(location.latitude, location.longitude, assessment.insuranceType, 200, distance.meters)
+    getFacilities(location.latitude, location.longitude, insurance, 200, distance.meters, serviceType)
       .then(data => setFacilities(data))
       .catch(() => setError('fetch_failed'))
       .finally(() => setLoading(false))
-  }, [location?.latitude, location?.longitude, distanceIdx])
+  }, [location?.latitude, location?.longitude, distanceIdx, insurance, serviceType])
+
+
+
+
 
   const handleZipSearch = async () => {
     const clean = zip.trim()
@@ -132,8 +142,6 @@ export default function Resources() {
       </h2>
       <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
         {t('resourcesSubtitle')}
-        {assessment.insuranceType && assessment.insuranceType !== 'UNKNOWN' &&
-          ` Filtered for ${assessment.insuranceType.toLowerCase()} insurance.`}
       </p>
 
       {/* 988 */}
@@ -189,6 +197,58 @@ export default function Resources() {
                   color:        distanceIdx === i ? 'var(--white)'     : 'var(--muted)',
                   borderColor:  distanceIdx === i ? 'var(--sage-dark)' : 'var(--sand-dark)',
                   fontWeight:   distanceIdx === i ? 600 : 400,
+                }}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Insurance filter */}
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-xs font-medium" style={{ color: 'var(--muted)', flexShrink: 0 }}>
+            Insurance:
+          </span>
+          <div className="flex gap-1.5 flex-wrap">
+            {[
+              { value: 'UNKNOWN', label: 'Any' },
+              { value: 'MEDICAID', label: 'Medicaid' },
+              { value: 'MEDICARE', label: 'Medicare' },
+              { value: 'PRIVATE',  label: 'Private' },
+              { value: 'NONE',     label: 'Uninsured' },
+            ].map(opt => (
+              <button key={opt.value} onClick={() => setInsurance(opt.value)}
+                className="text-xs px-3 py-1 rounded-full border transition-all"
+                style={{
+                  background:  insurance === opt.value ? 'var(--sage-dark)' : 'transparent',
+                  color:       insurance === opt.value ? 'var(--white)'     : 'var(--muted)',
+                  borderColor: insurance === opt.value ? 'var(--sage-dark)' : 'var(--sand-dark)',
+                  fontWeight:  insurance === opt.value ? 600 : 400,
+                }}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Service type filter */}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-xs font-medium" style={{ color: 'var(--muted)', flexShrink: 0 }}>
+            Type:
+          </span>
+          <div className="flex gap-1.5">
+            {[
+              { value: 'mh',   label: 'Mental health' },
+              { value: 'sa',   label: 'Substance use' },
+              { value: 'both', label: 'Both' },
+            ].map(opt => (
+              <button key={opt.value} onClick={() => setServiceType(opt.value)}
+                className="text-xs px-3 py-1 rounded-full border transition-all"
+                style={{
+                  background:  serviceType === opt.value ? 'var(--sage-dark)' : 'transparent',
+                  color:       serviceType === opt.value ? 'var(--white)'     : 'var(--muted)',
+                  borderColor: serviceType === opt.value ? 'var(--sage-dark)' : 'var(--sand-dark)',
+                  fontWeight:  serviceType === opt.value ? 600 : 400,
                 }}>
                 {opt.label}
               </button>
