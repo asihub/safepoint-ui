@@ -15,11 +15,10 @@ export default function FreeText() {
   const [error, setError] = useState(null)
 
   const INSURANCE_OPTIONS = [
-    { value: 'UNKNOWN',  label: t('insuranceUnknown') },
-    { value: 'MEDICAID', label: t('insuranceMedicaid') },
-    { value: 'MEDICARE', label: t('insuranceMedicare') },
-    { value: 'PRIVATE',  label: t('insurancePrivate') },
-    { value: 'NONE',     label: t('insuranceNone') },
+    { value: 'MEDICAID',  label: t('insuranceMedicaid') },
+    { value: 'MEDICARE',  label: t('insuranceMedicare') },
+    { value: 'SELF_PAY',  label: t('insuranceSelfPay') },
+    { value: 'OTHER',     label: t('insuranceOther') },
   ]
 
   const handleSubmit = async () => {
