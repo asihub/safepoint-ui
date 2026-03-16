@@ -14,12 +14,39 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
+// Custom blue "you are here" icon for user location marker
+const userLocationIcon = L.divIcon({
+  className: '',
+  html: `<div style="
+    width: 18px; height: 18px;
+    background: #2563eb;
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #2563eb, 0 2px 6px rgba(0,0,0,0.3);
+  "></div>`,
+  iconSize:   [18, 18],
+  iconAnchor: [9, 9],
+  popupAnchor:[0, -12],
+})
+
 const DISTANCE_OPTIONS = [
   { label: '5 miles',  meters: 8047  },
   { label: '10 miles', meters: 16093 },
   { label: '25 miles', meters: 40234 },
   { label: '50 miles', meters: 80467 },
 ]
+
+// Map assessment insuranceType → SAMHSA PAY field value
+function mapInsuranceToSamhsa(insuranceType) {
+  const map = {
+    'MEDICAID': 'Medicaid',
+    'MEDICARE': 'Medicare',
+    'SELF_PAY': 'Cash or self-payment',
+    'OTHER':    'ALL',
+    'UNKNOWN':  'ALL',
+  }
+  return map[insuranceType] || 'ALL'
+}
 
 // Extract unique values from services array for a given f2 code
 function extractServiceValues(facilities, f2Code) {
@@ -99,9 +126,7 @@ export default function Resources() {
 
   // Filters — client-side
   const [insurance,      setInsurance]      = useState(
-    assessment.insuranceType && assessment.insuranceType !== 'UNKNOWN'
-      ? assessment.insuranceType
-      : 'ALL'
+    mapInsuranceToSamhsa(assessment.insuranceType || 'OTHER')
   )
   const [careType,       setCareType]       = useState('Mental health treatment')
   const [page,           setPage]           = useState(1)
@@ -290,7 +315,9 @@ export default function Resources() {
             }}>
             <option value="ALL">All types</option>
             {careTypeOptions.map(opt => (
-              <option key={opt} value={opt}>{shortenLabel(opt)}</option>
+              <option key={opt} value={opt}>
+                {shortenLabel(opt)}{opt === 'Mental health treatment' ? ' ★' : ''}
+              </option>
             ))}
           </select>
         </div>
@@ -308,19 +335,26 @@ export default function Resources() {
       </div>
 
       {/* Results count */}
-      {!loading && location && (
-        <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>
-          {facilities.length > 0
-            ? `${facilities.length} facilit${facilities.length === 1 ? 'y' : 'ies'} found within ${distance.label}`
-            : `No facilities found within ${distance.label} — try a larger radius or different filters`}
-        </p>
-      )}
+      {!loading && location && (() => {
+        const withCoords = facilities.filter(f => f.latitude && f.longitude)
+        const noCoords   = facilities.length - withCoords.length
+        return (
+          <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>
+            {facilities.length > 0 ? (
+              <>
+                {facilities.length} facilit{facilities.length === 1 ? 'y' : 'ies'} found within {distance.label}
+                {noCoords > 0 && ` (${noCoords} without map location)`}
+              </>
+            ) : `No facilities found within ${distance.label} — try a larger radius or different filters`}
+          </p>
+        )
+      })()}
 
       {/* Map */}
       {location && (
         <div className="rounded-2xl overflow-hidden mb-4" style={{ aspectRatio: '1 / 1', width: '100%' }}>
           <MapContainer
-            key={`${location.latitude}-${location.longitude}`}
+            key={`${location.latitude}-${location.longitude}-${facilities.length}`}
             center={mapCenter}
             zoom={distanceIdx <= 1 ? 11 : distanceIdx === 2 ? 10 : 9}
             style={{ height: '100%', width: '100%' }}
@@ -329,7 +363,12 @@ export default function Resources() {
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <Marker position={mapCenter}><Popup>Your location</Popup></Marker>
+            <Marker position={mapCenter} icon={userLocationIcon}>
+              <Popup>
+                <strong>Your location</strong>
+                {locationLabel && <><br />{locationLabel}</>}
+              </Popup>
+            </Marker>
             {facilities.map((f, i) => {
               const lat = parseFloat(f.latitude)
               const lng = parseFloat(f.longitude)
@@ -403,10 +442,20 @@ function FacilityCard({ facility }) {
   const payService = (facility.services || []).find(s => s.f2 === 'PAY')
   const tcService  = (facility.services || []).find(s => s.f2 === 'TC')
 
+  const hasCoords = facility.latitude && facility.longitude
+
   return (
     <div className="rounded-2xl p-4"
       style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}>
-      <div className="font-semibold text-sm mb-2" style={{ color: 'var(--charcoal)' }}>{name}</div>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="font-semibold text-sm" style={{ color: 'var(--charcoal)' }}>{name}</div>
+        {!hasCoords && (
+          <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+            style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}>
+            No map location
+          </span>
+        )}
+      </div>
       {address && (
         <div className="flex items-start gap-2 text-xs mb-1.5" style={{ color: 'var(--muted)' }}>
           <MapPin size={13} className="mt-0.5 flex-shrink-0" /><span>{address}</span>
