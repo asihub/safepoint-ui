@@ -84,7 +84,9 @@ export default function Layout() {
         style={{ color: 'var(--muted)', borderTop: '1px solid var(--sand-dark)' }}
       >
         {t('footerText')}{' '}
-        <a href="tel:911" className="underline">911</a>.
+        <a href="tel:988" className="underline font-medium">988</a>
+        {' '}{t('footerOr')}{' '}
+        <a href="tel:911" className="underline font-medium">911</a>.
       </footer>
     </div>
   )
