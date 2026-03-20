@@ -7,32 +7,24 @@ import { ChevronRight, ChevronLeft, Loader2 } from 'lucide-react'
 
 export default function FreeText() {
   const navigate = useNavigate()
-  const { assessment, setFreeText, setResult, setInsurance } = useAssessmentContext()
+  const { assessment, setFreeText, setResult } = useAssessmentContext()
   const { t, lang } = useLanguage()
   const [text, setText] = useState(assessment.freeText || '')
-  const [insurance, setInsuranceLocal] = useState(assessment.insuranceType || 'UNKNOWN')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const INSURANCE_OPTIONS = [
-    { value: 'MEDICAID',  label: t('insuranceMedicaid') },
-    { value: 'MEDICARE',  label: t('insuranceMedicare') },
-    { value: 'SELF_PAY',  label: t('insuranceSelfPay') },
-    { value: 'OTHER',     label: t('insuranceOther') },
-  ]
+
 
   const handleSubmit = async () => {
     setLoading(true)
     setError(null)
     setFreeText(text)
-    setInsurance(insurance)
     try {
       const result = await analyzeRisk({
         questionnaireScores: assessment.questionnaireScores,
         freeText: text || undefined,
         proxyMode: assessment.mode === 'proxy',
         lang: lang,
-        insuranceType: insurance,
         latitude: assessment.location?.latitude,
         longitude: assessment.location?.longitude,
       })
@@ -58,16 +50,6 @@ export default function FreeText() {
         className="w-full p-4 rounded-2xl border resize-none text-sm outline-none mb-6"
         style={{ background: 'var(--white)', borderColor: 'var(--sand-dark)', color: 'var(--charcoal)', lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}
       />
-      <label className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
-        {t('insuranceLabel')}
-      </label>
-      <select value={insurance} onChange={e => setInsuranceLocal(e.target.value)}
-        className="w-full p-3 rounded-xl border mb-8 text-sm outline-none"
-        style={{ background: 'var(--white)', borderColor: 'var(--sand-dark)', color: 'var(--charcoal)', fontFamily: "'DM Sans', sans-serif" }}>
-        {INSURANCE_OPTIONS.map(opt => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
       {error && <p className="text-sm mb-4" style={{ color: 'var(--high)' }}>{error}</p>}
       <div className="flex gap-3">
         <button onClick={() => navigate('/screening')}

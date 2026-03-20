@@ -1,482 +1,274 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import { useAssessmentContext } from '../App'
-import { useLanguage } from '../hooks/useLanguage.jsx'
-import { getFacilities } from '../api/client'
-import { MapPin, Phone, Loader2, Search } from 'lucide-react'
-import 'leaflet/dist/leaflet.css'
-import L from 'leaflet'
+/**
+ * Translations for SafePoint UI.
+ * Supported languages: English (en), Spanish (es)
+ */
 
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
+export const translations = {
+  en: {
+    // Layout
+    appName: 'SafePoint',
+    mySafetyPlan: 'My Safety Plan',
+    footerText: 'SafePoint does not store personal information. For mental health crisis call',
+    footerOr: 'or for emergencies',
 
-// Custom blue "you are here" icon for user location marker
-const userLocationIcon = L.divIcon({
-  className: '',
-  html: `<div style="
-    width: 18px; height: 18px;
-    background: #2563eb;
-    border: 3px solid white;
-    border-radius: 50%;
-    box-shadow: 0 0 0 2px #2563eb, 0 2px 6px rgba(0,0,0,0.3);
-  "></div>`,
-  iconSize:   [18, 18],
-  iconAnchor: [9, 9],
-  popupAnchor:[0, -12],
-})
+    // Home
+    heroTitle: 'A safe place to check in with yourself',
+    heroSubtitle: 'Anonymous. Free. No account required. Takes about 5 minutes.',
+    modeQuickCheck: 'Quick Check',
+    modeQuickCheckDesc: 'I want to understand how I\'m feeling',
+    modeHelpNow: 'I Need Help Now',
+    modeHelpNowDesc: 'I\'m in distress and need immediate support',
+    modeWorriedAbout: 'I\'m Worried About Someone',
+    modeWorriedAboutDesc: 'I want to assess someone else\'s situation',
+    crisisPrompt: 'In crisis right now?',
+    callOrText988: 'Call or text 988',
 
-const DISTANCE_OPTIONS = [
-  { label: '5 miles',  meters: 8047  },
-  { label: '10 miles', meters: 16093 },
-  { label: '25 miles', meters: 40234 },
-  { label: '50 miles', meters: 80467 },
-]
+    // Screening
+    depressionScreening: 'Depression screening',
+    anxietyScreening: 'Anxiety screening',
+    phq9Title: 'Over the last 2 weeks, how often have you been bothered by the following?',
+    gad7Title: 'Over the last 2 weeks, how often have you been bothered by the following?',
+    phq9TitleProxy: 'Over the last 2 weeks, how often has the person you are concerned about been bothered by the following?',
+    gad7TitleProxy: 'Over the last 2 weeks, how often has the person you are concerned about shown the following?',
+    proxyBanner: 'You are completing this assessment on behalf of someone you are concerned about.',
+    answerNotAtAll: 'Not at all',
+    answerSeveralDays: 'Several days',
+    answerMoreThanHalf: 'More than half the days',
+    answerNearlyEvery: 'Nearly every day',
+    back: 'Back',
+    next: 'Next',
 
-// Map assessment insuranceType → SAMHSA PAY field value
-function mapInsuranceToSamhsa(insuranceType) {
-  const map = {
-    'MEDICAID': 'Medicaid',
-    'MEDICARE': 'Medicare',
-    'SELF_PAY': 'Cash or self-payment',
-    'OTHER':    'ALL',
-    'UNKNOWN':  'ALL',
+    // FreeText
+    howAreYouFeeling: 'How are you feeling?',
+    freeTextSubtitle: 'Optional — describe what\'s on your mind in your own words. This helps the AI understand your situation better.',
+    freeTextPlaceholder: 'You can write anything here — there are no right or wrong answers...',
+    seeMyResults: 'See my results',
+    analyzing: 'Analyzing...',
+
+    // Results
+    lowRisk: 'Low Risk',
+    mediumRisk: 'Moderate Risk',
+    highRisk: 'High Risk',
+    lowRiskMsg: 'Your responses suggest you are managing relatively well right now.',
+    mediumRiskMsg: 'Your responses suggest you may benefit from speaking with a mental health professional.',
+    highRiskMsg: 'Your responses suggest you may need immediate support. Please reach out now.',
+    callOrText988Now: 'Call or Text 988 Now',
+    questionnaireScores: 'Questionnaire scores',
+    signalsDetected: 'Signals detected in your text',
+    findSupportNearMe: 'Find support near me',
+    buildMySafetyPlan: 'Build my safety plan',
+    trackMyProgress: 'Track my progress',
+    downloadPdf: 'Download report (PDF)',
+    exportFhir: 'Export for healthcare provider (FHIR R4)',
+    severe: 'severe',
+    moderate: 'moderate',
+    mild: 'mild',
+    minimal: 'minimal',
+
+    // Resources
+    supportNearYou: 'Support near you',
+    resourcesSubtitle: 'Mental health treatment facilities in your area.',
+    crisis988Title: '988 Suicide & Crisis Lifeline',
+    crisis988Subtitle: 'Free, confidential — call or text 988',
+    enterZip: 'Enter your ZIP code to find nearby facilities',
+    showingResultsNear: 'Showing results near',
+    change: 'Change',
+    search: 'Search',
+    findingFacilities: 'Finding facilities near you...',
+    noFacilities: 'No facilities found nearby. Try a different ZIP code or insurance filter.',
+    invalidZip: 'Please enter a valid 5-digit ZIP code.',
+    zipNotFound: 'ZIP code not found. Please try another.',
+    geocodeFailed: 'Could not look up this ZIP code. Please try again.',
+
+    // Safety Plan
+    mySafetyPlanTitle: 'My Safety Plan',
+    safetyPlanSubtitle: 'Based on the Stanley-Brown Safety Planning Intervention. Your plan is saved securely using your code and PIN only.',
+    loadExistingPlan: 'Load existing plan',
+    noAccount: 'No account? Register at',
+    authPageLink: 'Auth page',
+    toGetCode: 'to get a code.',
+    saveSafetyPlan: 'Save safety plan',
+    saving: 'Saving...',
+    saved: 'Saved!',
+    yourCodePlaceholder: 'Your code (e.g. blue-river-42)',
+    pinPlaceholder: 'PIN',
+
+    // Safety Plan Steps
+    step1Label: 'Warning signs',
+    step1Hint: 'What tells you that a crisis might be coming? (thoughts, feelings, behaviors)',
+    step2Label: 'Internal coping strategies',
+    step2Hint: 'Things I can do on my own to take my mind off my problems',
+    step3Label: 'Social distractions',
+    step3Hint: 'People and settings that provide distraction and support',
+    step4Label: 'People I can ask for help',
+    step4Hint: 'Name and contact for people I trust',
+    step5Label: 'Professional resources',
+    step5Hint: 'Therapist, doctor, crisis lines (e.g. 988)',
+    step6Label: 'Making the environment safe',
+    step6Hint: 'Steps to remove or reduce access to means of self-harm',
+
+    // Auth
+    anonymousIdentity: 'Anonymous Identity',
+    authSubtitle: 'No email or name required. Your code and PIN are the only way to access your data.',
+    newUser: 'New user',
+    returnUser: 'Return user',
+    choosePinLabel: 'Choose a PIN (4-6 digits)',
+    generateMyCode: 'Generate my code',
+    yourAnonymousCode: 'Your anonymous code',
+    saveCodeMessage: 'Save this code. You will need it together with your PIN to access your data from another device.',
+    verifyCredentials: 'Verify credentials',
+    verifiedSuccess: 'Credentials verified successfully.',
+    verifiedFail: 'Invalid code or PIN.',
+
+    // Progress
+    myProgress: 'My Progress',
+    noHistoryTitle: 'No history yet',
+    noHistorySubtitle: 'Complete your first assessment to start tracking your progress over time.',
+    startAssessment: 'Start assessment',
+    stable: 'Stable',
+    improving: 'Improving',
+    worsening: 'Worsening',
+    basedOnLast: 'Based on your last',
+    assessments: 'assessments',
+    assessment: 'assessment',
+    riskOverTime: 'Risk level over time',
+    assessmentHistory: 'Assessment history',
+    latest: 'Latest',
+    newAssessment: 'New assessment',
+    deleteHistory: 'Delete all history? This cannot be undone.',
+  },
+
+  es: {
+    // Layout
+    appName: 'SafePoint',
+    mySafetyPlan: 'Mi Plan de Seguridad',
+    footerText: 'SafePoint no almacena información personal. Para crisis de salud mental llame al',
+    footerOr: 'o para emergencias',
+
+    // Home
+    heroTitle: 'Un lugar seguro para revisarte a ti mismo',
+    heroSubtitle: 'Anónimo. Gratuito. Sin cuenta requerida. Toma aproximadamente 5 minutos.',
+    modeQuickCheck: 'Revisión Rápida',
+    modeQuickCheckDesc: 'Quiero entender cómo me siento',
+    modeHelpNow: 'Necesito Ayuda Ahora',
+    modeHelpNowDesc: 'Estoy en crisis y necesito apoyo inmediato',
+    modeWorriedAbout: 'Me Preocupa Alguien',
+    modeWorriedAboutDesc: 'Quiero evaluar la situación de otra persona',
+    crisisPrompt: '¿En crisis ahora mismo?',
+    callOrText988: 'Llama o envía texto al 988',
+
+    // Screening
+    depressionScreening: 'Evaluación de depresión',
+    anxietyScreening: 'Evaluación de ansiedad',
+    phq9Title: 'En las últimas 2 semanas, ¿con qué frecuencia le han molestado los siguientes problemas?',
+    gad7Title: 'En las últimas 2 semanas, ¿con qué frecuencia le han molestado los siguientes problemas?',
+    phq9TitleProxy: 'En las últimas 2 semanas, ¿con qué frecuencia la persona que le preocupa ha tenido estos problemas?',
+    gad7TitleProxy: 'En las últimas 2 semanas, ¿con qué frecuencia la persona que le preocupa ha mostrado lo siguiente?',
+    proxyBanner: 'Está completando esta evaluación en nombre de alguien que le preocupa.',
+    answerNotAtAll: 'Para nada',
+    answerSeveralDays: 'Varios días',
+    answerMoreThanHalf: 'Más de la mitad de los días',
+    answerNearlyEvery: 'Casi todos los días',
+    back: 'Atrás',
+    next: 'Siguiente',
+
+    // FreeText
+    howAreYouFeeling: '¿Cómo te sientes?',
+    freeTextSubtitle: 'Opcional — describe lo que tienes en mente con tus propias palabras. Esto ayuda a la IA a entender mejor tu situación.',
+    freeTextPlaceholder: 'Puedes escribir lo que quieras aquí — no hay respuestas correctas o incorrectas...',
+    seeMyResults: 'Ver mis resultados',
+    analyzing: 'Analizando...',
+
+    // Results
+    lowRisk: 'Riesgo Bajo',
+    mediumRisk: 'Riesgo Moderado',
+    highRisk: 'Riesgo Alto',
+    lowRiskMsg: 'Sus respuestas sugieren que está manejando la situación relativamente bien en este momento.',
+    mediumRiskMsg: 'Sus respuestas sugieren que podría beneficiarse de hablar con un profesional de salud mental.',
+    highRiskMsg: 'Sus respuestas sugieren que puede necesitar apoyo inmediato. Por favor comuníquese ahora.',
+    callOrText988Now: 'Llame o Envíe Texto al 988 Ahora',
+    questionnaireScores: 'Puntuaciones del cuestionario',
+    signalsDetected: 'Señales detectadas en su texto',
+    findSupportNearMe: 'Encontrar apoyo cerca de mí',
+    buildMySafetyPlan: 'Crear mi plan de seguridad',
+    trackMyProgress: 'Seguir mi progreso',
+    downloadPdf: 'Descargar informe (PDF)',
+    exportFhir: 'Exportar para proveedor de salud (FHIR R4)',
+    severe: 'severo',
+    moderate: 'moderado',
+    mild: 'leve',
+    minimal: 'mínimo',
+
+    // Resources
+    supportNearYou: 'Apoyo cerca de ti',
+    resourcesSubtitle: 'Centros de tratamiento de salud mental en tu área.',
+    crisis988Title: 'Línea de Crisis de Suicidio y Crisis 988',
+    crisis988Subtitle: 'Gratis, confidencial — llama o envía texto al 988',
+    enterZip: 'Ingresa tu código postal para encontrar centros cercanos',
+    showingResultsNear: 'Mostrando resultados cerca de',
+    change: 'Cambiar',
+    search: 'Buscar',
+    findingFacilities: 'Buscando centros cerca de ti...',
+    noFacilities: 'No se encontraron centros cercanos. Intenta con un código postal diferente.',
+    invalidZip: 'Por favor ingresa un código postal de 5 dígitos válido.',
+    zipNotFound: 'Código postal no encontrado. Por favor intenta con otro.',
+    geocodeFailed: 'No se pudo buscar este código postal. Por favor intenta de nuevo.',
+
+    // Safety Plan
+    mySafetyPlanTitle: 'Mi Plan de Seguridad',
+    safetyPlanSubtitle: 'Basado en la Intervención de Planificación de Seguridad Stanley-Brown. Tu plan se guarda de forma segura usando solo tu código y PIN.',
+    loadExistingPlan: 'Cargar plan existente',
+    noAccount: '¿Sin cuenta? Regístrate en la',
+    authPageLink: 'página de autenticación',
+    toGetCode: 'para obtener un código.',
+    saveSafetyPlan: 'Guardar plan de seguridad',
+    saving: 'Guardando...',
+    saved: '¡Guardado!',
+    yourCodePlaceholder: 'Tu código (ej. blue-river-42)',
+    pinPlaceholder: 'PIN',
+
+    // Safety Plan Steps
+    step1Label: 'Señales de advertencia',
+    step1Hint: '¿Qué te indica que puede estar acercándose una crisis? (pensamientos, sentimientos, comportamientos)',
+    step2Label: 'Estrategias internas de afrontamiento',
+    step2Hint: 'Cosas que puedo hacer por mi cuenta para distraerme de mis problemas',
+    step3Label: 'Distracciones sociales',
+    step3Hint: 'Personas y lugares que brindan distracción y apoyo',
+    step4Label: 'Personas a quienes puedo pedir ayuda',
+    step4Hint: 'Nombre y contacto de personas en quienes confío',
+    step5Label: 'Recursos profesionales',
+    step5Hint: 'Terapeuta, médico, líneas de crisis (ej. 988)',
+    step6Label: 'Hacer el entorno seguro',
+    step6Hint: 'Pasos para eliminar o reducir el acceso a medios de autolesión',
+
+    // Auth
+    anonymousIdentity: 'Identidad Anónima',
+    authSubtitle: 'No se requiere correo electrónico ni nombre. Tu código y PIN son la única forma de acceder a tus datos.',
+    newUser: 'Nuevo usuario',
+    returnUser: 'Usuario existente',
+    choosePinLabel: 'Elige un PIN (4-6 dígitos)',
+    generateMyCode: 'Generar mi código',
+    yourAnonymousCode: 'Tu código anónimo',
+    saveCodeMessage: 'Guarda este código. Lo necesitarás junto con tu PIN para acceder a tus datos desde otro dispositivo.',
+    verifyCredentials: 'Verificar credenciales',
+    verifiedSuccess: 'Credenciales verificadas correctamente.',
+    verifiedFail: 'Código o PIN inválido.',
+
+    // Progress
+    myProgress: 'Mi Progreso',
+    noHistoryTitle: 'Aún no hay historial',
+    noHistorySubtitle: 'Completa tu primera evaluación para comenzar a seguir tu progreso a lo largo del tiempo.',
+    startAssessment: 'Iniciar evaluación',
+    stable: 'Estable',
+    improving: 'Mejorando',
+    worsening: 'Empeorando',
+    basedOnLast: 'Basado en tus últimas',
+    assessments: 'evaluaciones',
+    assessment: 'evaluación',
+    riskOverTime: 'Nivel de riesgo a lo largo del tiempo',
+    assessmentHistory: 'Historial de evaluaciones',
+    latest: 'Más reciente',
+    newAssessment: 'Nueva evaluación',
+    deleteHistory: '¿Eliminar todo el historial? Esta acción no se puede deshacer.',
   }
-  return map[insuranceType] || 'ALL'
-}
-
-// Extract unique values from services array for a given f2 code
-function extractServiceValues(facilities, f2Code) {
-  const values = new Set()
-  facilities.forEach(f => {
-    (f.services || []).forEach(s => {
-      if (s.f2 === f2Code && s.f3) {
-        s.f3.split(';').map(v => v.trim()).filter(Boolean).forEach(v => values.add(v))
-      }
-    })
-  })
-  return [...values].sort()
-}
-
-// Shorten long service names for display in dropdowns
-function shortenLabel(label) {
-  const map = {
-    'Treatment for co-occurring substance use plus either serious mental illness (SMI) in adults and/or serious emotional disturbance (SED) in children': 'Co-occurring disorders',
-    'Transitional housing, halfway house, or sober home': 'Transitional housing',
-    'Federal military insurance (e.g., TRICARE)': 'TRICARE (military)',
-    'Federal, or any government funding for substance use treatment programs': 'Federal govt funding',
-    'IHS/Tribal/Urban (ITU) funds': 'IHS/Tribal funds',
-    'State-financed health insurance plan other than Medicaid': 'State health insurance',
-    'State mental health agency (or equivalent) funds': 'State mental health funds',
-    'State welfare or child and family services funds': 'State welfare funds',
-    'State corrections or juvenile justice funds': 'State corrections funds',
-    'Community Mental Health Block Grants': 'Community MH grants',
-    'Community Service Block Grants': 'Community service grants',
-    'Private or Community foundation': 'Private foundation',
-    'U.S. Department of VA funds': 'VA funds',
-    'County or local government funds': 'County/local funds',
-    'State education agency funds': 'State education funds',
-  }
-  return map[label] || label
-}
-
-// Check if a facility matches a filter value for a given f2 code
-function facilityMatches(facility, f2Code, value) {
-  if (value === 'ALL') return true
-  return (facility.services || []).some(s =>
-    s.f2 === f2Code && s.f3?.toLowerCase().includes(value.toLowerCase())
-  )
-}
-
-function MapUpdater({ center, zoom, distanceChanged }) {
-  const map = useMap()
-  useEffect(() => {
-    if (distanceChanged) {
-      map.flyTo(center, zoom, { duration: 0.5 })
-    } else {
-      map.panTo(center, { duration: 0.5 })
-    }
-  }, [center[0], center[1], distanceChanged])
-  return null
-}
-
-function MapUpdaterController({ center, distanceIdx }) {
-  const prevIdx = useRef(distanceIdx)
-  const zoom    = distanceIdx <= 1 ? 11 : distanceIdx === 2 ? 10 : 9
-  const changed = prevIdx.current !== distanceIdx
-  useEffect(() => { prevIdx.current = distanceIdx }, [distanceIdx])
-  return <MapUpdater center={center} zoom={zoom} distanceChanged={changed} />
-}
-
-export default function Resources() {
-  const { assessment } = useAssessmentContext()
-  const { t }          = useLanguage()
-
-  // All facilities from API (unfiltered)
-  const [allFacilities,  setAllFacilities]  = useState([])
-  const [loading,        setLoading]        = useState(false)
-  const [error,          setError]          = useState(null)
-  const [location,       setLocation]       = useState(assessment.location)
-  const [zip,            setZip]            = useState('')
-  const [locationLabel,  setLocationLabel]  = useState(null)
-  const [distanceIdx,    setDistanceIdx]    = useState(1)
-
-  // Filters — client-side
-  const [insurance,      setInsurance]      = useState(
-    mapInsuranceToSamhsa(assessment.insuranceType || 'OTHER')
-  )
-  const [careType,       setCareType]       = useState('Mental health treatment')
-  const [page,           setPage]           = useState(1)
-  const PAGE_SIZE = 10
-  const distance  = DISTANCE_OPTIONS[distanceIdx]
-
-  // Build dynamic filter options from loaded facilities
-  const insuranceOptions = useMemo(() => extractServiceValues(allFacilities, 'PAY'), [allFacilities])
-  const careTypeOptions  = useMemo(() => extractServiceValues(allFacilities, 'TC'),  [allFacilities])
-
-  // Apply client-side filters
-  const facilities = useMemo(() => {
-    return allFacilities.filter(f =>
-      facilityMatches(f, 'PAY', insurance) &&
-      facilityMatches(f, 'TC',  careType)
-    )
-  }, [allFacilities, insurance, careType])
-
-  // Try geolocation on mount
-  useEffect(() => {
-    if (!location) {
-      navigator.geolocation?.getCurrentPosition(
-        pos => {
-          setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
-          setLocationLabel('your current location')
-        },
-        () => setError('location_denied')
-      )
-    }
-  }, [])
-
-  // Fetch ALL facilities (no insurance/type filter) — filter client-side
-  useEffect(() => {
-    if (!location) return
-    setLoading(true)
-    setError(null)
-    setPage(1)
-    getFacilities(location.latitude, location.longitude, 'UNKNOWN', 200, distance.meters, 'both')
-      .then(data => setAllFacilities(data))
-      .catch(() => setError('fetch_failed'))
-      .finally(() => setLoading(false))
-  }, [location?.latitude, location?.longitude, distanceIdx])
-
-  // Reset page when filters change
-  useEffect(() => { setPage(1) }, [insurance, careType])
-
-  const handleZipSearch = async () => {
-    const clean = zip.trim()
-    if (!/^\d{5}$/.test(clean)) { setError('invalid_zip'); return }
-    setLoading(true)
-    setError(null)
-    try {
-      const res  = await fetch(
-        `https://nominatim.openstreetmap.org/search?postalcode=${clean}&country=US&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'en' } }
-      )
-      const data = await res.json()
-      if (data.length === 0) { setError('zip_not_found'); setLoading(false); return }
-      const { lat, lon, display_name } = data[0]
-      const parts = display_name.split(', ')
-      const label = parts.length >= 2 ? `${parts[0]}, ${parts[1]}` : `ZIP ${clean}`
-      setLocation({ latitude: parseFloat(lat), longitude: parseFloat(lon) })
-      setLocationLabel(label)
-    } catch {
-      setError('geocode_failed')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const mapCenter  = location ? [location.latitude, location.longitude] : [39.5, -98.35]
-  const totalPages = Math.ceil(facilities.length / PAGE_SIZE)
-  const paginated  = facilities.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  // Distance filter button
-  const FilterBtn = ({ active, onClick, label }) => (
-    <button onClick={onClick}
-      className="text-xs px-3 py-1 rounded-full border transition-all whitespace-nowrap"
-      style={{
-        background:  active ? 'var(--sage-dark)' : 'transparent',
-        color:       active ? 'var(--white)'     : 'var(--muted)',
-        borderColor: active ? 'var(--sage-dark)' : 'var(--sand-dark)',
-        fontWeight:  active ? 600 : 400,
-      }}>
-      {label}
-    </button>
-  )
-
-  return (
-    <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-6 py-8">
-      <h2 className="mb-2" style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
-        {t('supportNearYou')}
-      </h2>
-      <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
-        {t('resourcesSubtitle')}
-      </p>
-
-      {/* 988 */}
-      <a href="tel:988"
-        className="flex items-center gap-3 px-4 py-4 rounded-2xl mb-4 font-medium"
-        style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
-        <Phone size={20} />
-        <div>
-          <div className="font-semibold">{t('crisis988Title')}</div>
-          <div className="text-xs" style={{ opacity: 0.75 }}>{t('crisis988Subtitle')}</div>
-        </div>
-      </a>
-
-      {/* Search + filters card */}
-      <div className="rounded-2xl p-4 mb-4"
-        style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}>
-
-        <p className="text-sm font-medium mb-3" style={{ color: 'var(--charcoal)' }}>
-          {location && error !== 'location_denied'
-            ? `${t('showingResultsNear')} ${locationLabel || 'your location'}`
-            : t('enterZip')}
-        </p>
-
-        {/* ZIP */}
-        <div className="flex gap-2 mb-4">
-          <input value={zip} onChange={e => setZip(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleZipSearch()}
-            placeholder="e.g. 92101" maxLength={5}
-            className="flex-1 px-3 py-2 rounded-xl border text-sm outline-none"
-            style={{ borderColor: 'var(--sand-dark)', fontFamily: "'DM Sans', sans-serif" }} />
-          <button onClick={handleZipSearch}
-            className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium"
-            style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
-            <Search size={16} /> {t('search')}
-          </button>
-        </div>
-
-        {/* Distance */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-medium" style={{ color: 'var(--muted)', flexShrink: 0, minWidth: 60 }}>
-            Within:
-          </span>
-          <div className="flex gap-1.5 flex-wrap">
-            {DISTANCE_OPTIONS.map((opt, i) => (
-              <FilterBtn key={i} value={i} active={distanceIdx === i}
-                onClick={() => setDistanceIdx(i)} label={opt.label} />
-            ))}
-          </div>
-        </div>
-
-        {/* Insurance — dropdown */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-medium" style={{ color: 'var(--muted)', flexShrink: 0, minWidth: 60 }}>
-            Insurance:
-          </span>
-          <div className="flex-1 min-w-0"><select
-            value={insurance}
-            onChange={e => setInsurance(e.target.value)}
-            className="px-3 py-1.5 rounded-xl border text-xs outline-none"
-            style={{
-              borderColor: 'var(--sand-dark)',
-              color: 'var(--charcoal)',
-              fontFamily: "'DM Sans', sans-serif",
-              background: 'var(--white)',
-              width: '100%',
-            }}>
-            <option value="ALL">All types</option>
-            {insuranceOptions.map(opt => (
-              <option key={opt} value={opt}>{shortenLabel(opt)}</option>
-            ))}
-          </select></div>
-        </div>
-
-        {/* Care type — dropdown */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-medium" style={{ color: 'var(--muted)', flexShrink: 0, minWidth: 60 }}>
-            Care type:
-          </span>
-          <select
-            value={careType}
-            onChange={e => setCareType(e.target.value)}
-            className="px-3 py-1.5 rounded-xl border text-xs outline-none"
-            style={{
-              borderColor: 'var(--sand-dark)',
-              color: 'var(--charcoal)',
-              fontFamily: "'DM Sans', sans-serif",
-              background: 'var(--white)',
-              maxWidth: '100%',
-              width: '100%',
-              whiteSpace: 'normal',
-            }}>
-            <option value="ALL">All types</option>
-            {careTypeOptions.map(opt => (
-              <option key={opt} value={opt}>
-                {shortenLabel(opt)}{opt === 'Mental health treatment' ? ' ★' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Disclaimer */}
-        <p className="text-xs mt-3 pt-3" style={{ color: 'var(--muted)', borderTop: '1px solid var(--sand-dark)' }}>
-          Facilities may accept multiple insurance types and offer multiple care types.
-          Counts by filter will not add up to the total.
-        </p>
-
-        {/* Errors */}
-        {error === 'invalid_zip'   && <p className="text-xs mt-2" style={{ color: 'var(--high)' }}>{t('invalidZip')}</p>}
-        {error === 'zip_not_found' && <p className="text-xs mt-2" style={{ color: 'var(--high)' }}>{t('zipNotFound')}</p>}
-        {error === 'geocode_failed'&& <p className="text-xs mt-2" style={{ color: 'var(--high)' }}>{t('geocodeFailed')}</p>}
-      </div>
-
-      {/* Results count */}
-      {!loading && location && (() => {
-        const withCoords = facilities.filter(f => f.latitude && f.longitude)
-        const noCoords   = facilities.length - withCoords.length
-        return (
-          <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>
-            {facilities.length > 0 ? (
-              <>
-                {facilities.length} facilit{facilities.length === 1 ? 'y' : 'ies'} found within {distance.label}
-                {noCoords > 0 && ` (${noCoords} without map location)`}
-              </>
-            ) : `No facilities found within ${distance.label} — try a larger radius or different filters`}
-          </p>
-        )
-      })()}
-
-      {/* Map */}
-      {location && (
-        <div className="rounded-2xl overflow-hidden mb-4" style={{ aspectRatio: '1 / 1', width: '100%' }}>
-          <MapContainer
-            key={`${location.latitude}-${location.longitude}-${facilities.length}`}
-            center={mapCenter}
-            zoom={distanceIdx <= 1 ? 11 : distanceIdx === 2 ? 10 : 9}
-            style={{ height: '100%', width: '100%' }}
-            scrollWheelZoom={false}>
-            <MapUpdaterController center={mapCenter} distanceIdx={distanceIdx} />
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <Marker position={mapCenter} icon={userLocationIcon}>
-              <Popup>
-                <strong>Your location</strong>
-                {locationLabel && <><br />{locationLabel}</>}
-              </Popup>
-            </Marker>
-            {facilities.map((f, i) => {
-              const lat = parseFloat(f.latitude)
-              const lng = parseFloat(f.longitude)
-              if (!lat || !lng) return null
-              // Extract insurance from services
-              const payService = (f.services || []).find(s => s.f2 === 'PAY')
-              const insurance  = payService?.f3 || null
-              const tcService  = (f.services || []).find(s => s.f2 === 'TC')
-              const careTypes  = tcService?.f3 || null
-              return (
-                <Marker key={i} position={[lat, lng]}>
-                  <Popup>
-                    <strong>{f.name1 || f.name}</strong>
-                    {f.street1 && <><br />{f.street1}</>}
-                    {f.city    && <><br />{f.city}, {f.state}</>}
-                    {f.phone   && <><br /><a href={`tel:${f.phone}`}>{f.phone}</a></>}
-                    {careTypes  && <><br /><span style={{color:'#666',fontSize:'0.85em'}}>Care: {careTypes}</span></>}
-                    {insurance  && <><br /><span style={{color:'#666',fontSize:'0.85em'}}>Insurance: {insurance}</span></>}
-                  </Popup>
-                </Marker>
-              )
-            })}
-          </MapContainer>
-        </div>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <div className="flex items-center justify-center py-8" style={{ color: 'var(--muted)' }}>
-          <Loader2 size={20} className="animate-spin mr-2" />
-          {t('findingFacilities')}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-between mb-2 mt-2">
-          <button onClick={() => { setPage(p => Math.max(1, p-1)); window.scrollTo(0,0) }}
-            disabled={page === 1}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
-            style={{ borderColor: 'var(--sand-dark)', color: page === 1 ? 'var(--sand-dark)' : 'var(--charcoal)', opacity: page === 1 ? 0.4 : 1 }}>
-            ← Prev
-          </button>
-          <span className="text-xs" style={{ color: 'var(--muted)' }}>
-            Page {page} of {totalPages}
-          </span>
-          <button onClick={() => { setPage(p => Math.min(totalPages, p+1)); window.scrollTo(0,0) }}
-            disabled={page === totalPages}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
-            style={{ borderColor: 'var(--sand-dark)', color: page === totalPages ? 'var(--sand-dark)' : 'var(--charcoal)', opacity: page === totalPages ? 0.4 : 1 }}>
-            Next →
-          </button>
-        </div>
-      )}
-
-      {/* Facility list */}
-      <div className="flex flex-col gap-3">
-        {paginated.map((f, i) => <FacilityCard key={(page-1)*PAGE_SIZE+i} facility={f} />)}
-      </div>
-    </div>
-  )
-}
-
-function FacilityCard({ facility }) {
-  const name     = facility.name1 || facility.name || 'Mental Health Facility'
-  const street   = facility.street1 || ''
-  const city     = facility.city    || ''
-  const state    = facility.state   || ''
-  const address  = [street, city, state].filter(Boolean).join(', ')
-  const phone    = facility.phone
-  const payService = (facility.services || []).find(s => s.f2 === 'PAY')
-  const tcService  = (facility.services || []).find(s => s.f2 === 'TC')
-
-  const hasCoords = facility.latitude && facility.longitude
-
-  return (
-    <div className="rounded-2xl p-4"
-      style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="font-semibold text-sm" style={{ color: 'var(--charcoal)' }}>{name}</div>
-        {!hasCoords && (
-          <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-            style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}>
-            No map location
-          </span>
-        )}
-      </div>
-      {address && (
-        <div className="flex items-start gap-2 text-xs mb-1.5" style={{ color: 'var(--muted)' }}>
-          <MapPin size={13} className="mt-0.5 flex-shrink-0" /><span>{address}</span>
-        </div>
-      )}
-      {tcService?.f3 && (
-        <p className="text-xs mb-1.5" style={{ color: 'var(--muted)' }}>
-          <span className="font-medium">Care:</span> {tcService.f3}
-        </p>
-      )}
-      {payService?.f3 && (
-        <p className="text-xs mb-2" style={{ color: 'var(--muted)' }}>
-          <span className="font-medium">Insurance:</span> {payService.f3}
-        </p>
-      )}
-      {phone && (
-        <a href={`tel:${phone}`} className="flex items-center gap-2 text-xs font-medium"
-          style={{ color: 'var(--sage-dark)' }}>
-          <Phone size={13} />{phone}
-        </a>
-      )}
-    </div>
-  )
 }
