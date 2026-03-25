@@ -141,7 +141,8 @@ export default function Resources() {
   const facilities = useMemo(() => {
     return allFacilities.filter(f =>
       facilityMatches(f, 'PAY', insurance) &&
-      facilityMatches(f, 'TC',  careType)
+      facilityMatches(f, 'TC',  careType) &&
+      (f.street1 || f.phone)  // exclude if no address AND no phone
     )
   }, [allFacilities, insurance, careType])
 
