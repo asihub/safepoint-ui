@@ -83,6 +83,30 @@ export default function Results() {
         </a>
       )}
 
+      {/* ── Reported concerns ── */}
+      {assessment.concerns?.length > 0 && (
+        <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
+          <h3 className="font-semibold text-sm mb-3" style={{ color: 'var(--charcoal)' }}>
+            Reported concerns
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {assessment.concerns.map(concern => {
+              const isHigh = ['Suicidal thoughts', 'Thoughts of self-harm'].includes(concern)
+              return (
+                <span key={concern} className="text-xs px-3 py-1 rounded-full"
+                  style={{
+                    background: isHigh ? '#FDECEA' : 'var(--sand-dark)',
+                    color:      isHigh ? '#a32d2d' : 'var(--muted)',
+                    fontWeight: isHigh ? 500 : 400,
+                  }}>
+                  {concern}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Questionnaire scores ── */}
       <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
         <div className="flex items-center gap-2 mb-4">
@@ -200,6 +224,7 @@ export default function Results() {
               result.phq9Score != null && `PHQ-9 (${result.phq9Score}/27)`,
               result.gad7Score != null && `GAD-7 (${result.gad7Score}/21)`,
               result.aiAnalysis && `AI text (${Math.round(result.aiAnalysis.confidence * 100)}%)`,
+              assessment.concerns?.length > 0 && `${assessment.concerns.length} concern${assessment.concerns.length > 1 ? 's' : ''}`,
             ].filter(Boolean).join(' + ')}
           </p>
           <p>{result.explanation}</p>

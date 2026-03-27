@@ -34,6 +34,9 @@ export function useAssessment() {
   const setFreeText = (text) =>
     setAssessment(prev => ({ ...prev, freeText: text }))
 
+  const setConcerns = (concerns) =>
+    setAssessment(prev => ({ ...prev, concerns }))
+
   const setInsurance = (type) =>
     setAssessment(prev => ({ ...prev, insuranceType: type }))
 
@@ -51,6 +54,7 @@ export function useAssessment() {
     setScore,
     setAnswers,
     setFreeText,
+    setConcerns,
     setInsurance,
     setLocation,
     setResult,
