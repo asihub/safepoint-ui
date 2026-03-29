@@ -83,30 +83,6 @@ export default function Results() {
         </a>
       )}
 
-      {/* ── Reported concerns ── */}
-      {assessment.concerns?.length > 0 && (
-        <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
-          <h3 className="font-semibold text-sm mb-3" style={{ color: 'var(--charcoal)' }}>
-            Reported concerns
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {assessment.concerns.map(concern => {
-              const isHigh = ['Suicidal thoughts', 'Thoughts of self-harm'].includes(concern)
-              return (
-                <span key={concern} className="text-xs px-3 py-1 rounded-full"
-                  style={{
-                    background: isHigh ? '#FDECEA' : 'var(--sand-dark)',
-                    color:      isHigh ? '#a32d2d' : 'var(--muted)',
-                    fontWeight: isHigh ? 500 : 400,
-                  }}>
-                  {concern}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
       {/* ── Questionnaire scores ── */}
       <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
         <div className="flex items-center gap-2 mb-4">
@@ -136,6 +112,30 @@ export default function Results() {
       </div>
 
       {/* ── AI Text score ── */}
+      {/* ── Reported concerns ── */}
+      {assessment.concerns?.length > 0 && (
+        <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
+          <h3 className="font-semibold text-sm mb-3" style={{ color: 'var(--charcoal)' }}>
+            Reported concerns
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {assessment.concerns.map(concern => {
+              const isHigh = ['Suicidal thoughts', 'Thoughts of self-harm'].includes(concern)
+              return (
+                <span key={concern} className="text-xs px-3 py-1 rounded-full"
+                  style={{
+                    background: isHigh ? '#FDECEA' : 'var(--sand-dark)',
+                    color:      isHigh ? '#a32d2d' : 'var(--muted)',
+                    fontWeight: isHigh ? 500 : 400,
+                  }}>
+                  {concern}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {result.aiAnalysis && (
         <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
           <div className="flex items-center gap-2 mb-4">
@@ -151,27 +151,18 @@ export default function Results() {
               scoreLabel={result.aiAnalysis.riskLevel}
               percent={Math.round(result.aiAnalysis.confidence * 100)}
               color={RISK_COLOR[result.aiAnalysis.riskLevel] || 'var(--muted)'}
-              severity={`${Math.round(result.aiAnalysis.confidence * 100)}% confidence`}
+              severity={(() => {
+                const scores = result.aiAnalysis.scores || {}
+                const low  = Math.round((scores.low  || 0) * 100)
+                const high = Math.round((scores.high || 0) * 100)
+                const med  = 100 - low - high
+                const conf = result.aiAnalysis.riskLevel === 'LOW' ? low
+                           : result.aiAnalysis.riskLevel === 'HIGH' ? high : med
+                return `${conf}% confidence`
+              })()}
               tooltip={`A fine-tuned DistilBERT model analyzed your free text and classified it as ${result.aiAnalysis.riskLevel} risk with ${Math.round(result.aiAnalysis.confidence * 100)}% confidence. The bar shows how certain the model is — higher confidence means the text more clearly matched patterns from the training data. This is one of three signals used in the final assessment.`}
             />
-            {/* Per-class scores */}
-            <div className="flex gap-2 mt-1">
-              {['low', 'medium', 'high'].map(level => (
-                <div key={level} className="flex-1">
-                  <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--muted)' }}>
-                    <span className="capitalize">{level}</span>
-                    <span>{Math.round((result.aiAnalysis.scores?.[level] || 0) * 100)}%</span>
-                  </div>
-                  <div className="h-1 rounded-full" style={{ background: 'var(--sand-dark)' }}>
-                    <div className="h-full rounded-full"
-                      style={{
-                        width:      `${Math.round((result.aiAnalysis.scores?.[level] || 0) * 100)}%`,
-                        background: RISK_COLOR[level.toUpperCase()],
-                      }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+
           </div>
 
           {/* Signals */}
@@ -216,18 +207,14 @@ export default function Results() {
           </span>
         </div>
 
-        {/* How it was computed */}
-        <div className="text-xs" style={{ color: 'var(--muted)' }}>
-          <p className="mb-1">
-            <span className="font-medium">Sources: </span>
-            {[
-              result.phq9Score != null && `PHQ-9 (${result.phq9Score}/27)`,
-              result.gad7Score != null && `GAD-7 (${result.gad7Score}/21)`,
-              result.aiAnalysis && `AI text (${Math.round(result.aiAnalysis.confidence * 100)}%)`,
-              assessment.concerns?.length > 0 && `${assessment.concerns.length} concern${assessment.concerns.length > 1 ? 's' : ''}`,
-            ].filter(Boolean).join(' + ')}
+        {/* Combined result */}
+        <div className="text-sm" style={{ color: 'var(--muted)', lineHeight: 1.8 }}>
+          <p>Your risk level has been assessed as <span style={{ color: config.color, fontWeight: 600 }}>{result.riskLevel}</span>.</p>
+          <p style={{ color: 'var(--charcoal)', fontWeight: 600 }}>
+            {result.riskLevel === 'HIGH'   && 'We strongly recommend reaching out to a crisis service immediately.'}
+            {result.riskLevel === 'MEDIUM' && 'We recommend speaking with a mental health professional soon.'}
+            {result.riskLevel === 'LOW'    && 'Continue monitoring how you feel and reach out if things change.'}
           </p>
-          <p>{result.explanation}</p>
         </div>
       </div>
 
