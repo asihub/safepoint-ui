@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
-import { useLanguage } from '../hooks/useLanguage.jsx'
+import { useLanguage } from '../hooks/useLanguage'
 import { Heart, Users, Shield } from 'lucide-react'
 
 export default function Home() {
@@ -12,6 +12,12 @@ export default function Home() {
     reset()
     setMode(mode)
     navigate('/screening')
+  }
+
+  const startCrisis = () => {
+    reset()
+    setMode('self')
+    navigate('/resources')
   }
 
   return (
@@ -37,7 +43,7 @@ export default function Home() {
         <ModeCard icon={<Heart size={22} />} title={t('modeQuickCheck')}
           description={t('modeQuickCheckDesc')} onClick={() => start('self')} primary />
         <ModeCard icon={<Users size={22} />} title={t('modeHelpNow')}
-          description={t('modeHelpNowDesc')} onClick={() => start('self')} urgent />
+          description={t('modeHelpNowDesc')} onClick={() => startCrisis()} urgent />
         <ModeCard icon={<Shield size={22} />} title={t('modeWorriedAbout')}
           description={t('modeWorriedAboutDesc')} onClick={() => start('proxy')} />
       </div>

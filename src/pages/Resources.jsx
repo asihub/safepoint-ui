@@ -113,7 +113,7 @@ function MapUpdaterController({ center, distanceIdx }) {
 
 export default function Resources() {
   const { assessment } = useAssessmentContext()
-  const { t }          = useLanguage()
+  const { t, lang }    = useLanguage()
 
   // All facilities from API (unfiltered)
   const [allFacilities,  setAllFacilities]  = useState([])
@@ -224,6 +224,7 @@ export default function Resources() {
       <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
         {t('resourcesSubtitle')}
       </p>
+
 
       {/* 988 */}
       <a href="tel:988"
