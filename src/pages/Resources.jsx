@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage.jsx'
 import { getFacilities } from '../api/client'
-import { MapPin, Phone, Loader2, Search } from 'lucide-react'
+import { MapPin, Phone, Loader2, Search, ChevronLeft } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -112,6 +113,7 @@ function MapUpdaterController({ center, distanceIdx }) {
 }
 
 export default function Resources() {
+  const navigate        = useNavigate()
   const { assessment } = useAssessmentContext()
   const { t, lang }    = useLanguage()
 
@@ -218,9 +220,14 @@ export default function Resources() {
 
   return (
     <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-6 py-8">
-      <h2 className="mb-2" style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
-        {t('supportNearYou')}
-      </h2>
+      <div className="flex items-center gap-3 mb-2">
+        <button onClick={() => navigate('/')} style={{ color: 'var(--muted)' }}>
+          <ChevronLeft size={22} />
+        </button>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
+          {t('supportNearYou')}
+        </h2>
+      </div>
       <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
         {t('resourcesSubtitle')}
       </p>
