@@ -10,7 +10,7 @@ export default function Layout() {
   // Disable language switcher during screening to prevent mid-questionnaire language change
   const isScreening = location.pathname === '/screening'
   // Show back-to-results button on secondary pages
-  const showBackToResults = ['/resources', '/safety-plan', '/progress', '/auth'].includes(location.pathname)
+  const showBackToResults = ['/safety-plan', '/progress', '/auth'].includes(location.pathname)
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--sand)' }}>
