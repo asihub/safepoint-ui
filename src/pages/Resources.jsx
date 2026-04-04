@@ -488,12 +488,12 @@ function FacilityCard({ facility }) {
       )}
       {tcService?.f3 && (
         <p className="text-xs mb-1.5" style={{ color: 'var(--muted)' }}>
-          <span className="font-medium">Care:</span> {tcService.f3}
+          <span style={{ fontWeight: 600, color: 'var(--charcoal)' }}>Care Type:</span> {tcService.f3}
         </p>
       )}
       {payService?.f3 && (
         <p className="text-xs mb-2" style={{ color: 'var(--muted)' }}>
-          <span className="font-medium">Insurance:</span> {payService.f3}
+          <span style={{ fontWeight: 600, color: 'var(--charcoal)' }}>Insurance:</span> {payService.f3}
         </p>
       )}
       {phone && (
