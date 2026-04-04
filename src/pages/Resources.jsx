@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage.jsx'
 import { getFacilities } from '../api/client'
-import { MapPin, Phone, Loader2, Search, ChevronLeft } from 'lucide-react'
+import { MapPin, Phone, Loader2, Search, ChevronLeft, Info } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -332,10 +332,13 @@ export default function Resources() {
         </div>
 
         {/* Disclaimer */}
-        <p className="text-xs mt-3 pt-3" style={{ color: 'var(--muted)', borderTop: '1px solid var(--sand-dark)' }}>
-          Facilities may accept multiple insurance types and offer multiple care types.
-          Counts by filter will not add up to the total.
-        </p>
+        <div className="flex items-start gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--sand-dark)' }}>
+          <Info size={13} style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 1 }} />
+          <p className="text-xs" style={{ color: 'var(--muted)' }}>
+            Facilities may accept multiple insurance types and offer multiple care types.
+            Counts by filter will not add up to the total.
+          </p>
+        </div>
 
         {/* Errors */}
         {error === 'invalid_zip'   && <p className="text-xs mt-2" style={{ color: 'var(--high)' }}>{t('invalidZip')}</p>}
@@ -390,9 +393,25 @@ export default function Resources() {
                     <strong>{f.name1 || f.name}</strong>
                     {f.street1 && <><br />{f.street1}</>}
                     {f.city    && <><br />{f.city}, {f.state}</>}
-                    {f.phone   && <><br /><a href={`tel:${f.phone}`}>{f.phone}</a></>}
-                    {careTypes  && <><br /><span style={{color:'#666',fontSize:'0.85em'}}>Care: {careTypes}</span></>}
-                    {insurance  && <><br /><span style={{color:'#666',fontSize:'0.85em'}}>Insurance: {insurance}</span></>}
+                    {f.phone   && <><br /><a href={`tel:${f.phone}`}>{f.phone}</a><br /></>}
+                    {careTypes && (
+                      <>
+                        <br />
+                        <strong style={{fontSize:'0.85em'}}>Care Type:</strong>
+                        <ul style={{margin:'2px 0 0 12px',padding:0,fontSize:'0.82em',color:'#444'}}>
+                          {careTypes.split(';').map((c,i) => <li key={i}>{c.trim()}</li>)}
+                        </ul>
+                      </>
+                    )}
+                    {insurance && (
+                      <>
+                        <br />
+                        <strong style={{fontSize:'0.85em'}}>Insurance:</strong>
+                        <ul style={{margin:'2px 0 0 12px',padding:0,fontSize:'0.82em',color:'#444'}}>
+                          {insurance.split(';').map((ins,i) => <li key={i}>{ins.trim()}</li>)}
+                        </ul>
+                      </>
+                    )}
                   </Popup>
                 </Marker>
               )
