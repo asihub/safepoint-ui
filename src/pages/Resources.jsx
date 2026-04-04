@@ -123,6 +123,7 @@ export default function Resources() {
   const [error,          setError]          = useState(null)
   const [location,       setLocation]       = useState(assessment.location)
   const [zip,            setZip]            = useState('')
+  const [zipAutoFilled,  setZipAutoFilled]  = useState(false)
   const [locationLabel,  setLocationLabel]  = useState(null)
   const [distanceIdx,    setDistanceIdx]    = useState(1)
 
@@ -148,13 +149,27 @@ export default function Resources() {
     )
   }, [allFacilities, insurance, careType])
 
-  // Try geolocation on mount
+  // Try geolocation on mount — also reverse geocode to fill ZIP field
   useEffect(() => {
     if (!location) {
       navigator.geolocation?.getCurrentPosition(
-        pos => {
-          setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
+        async pos => {
+          const lat = pos.coords.latitude
+          const lng = pos.coords.longitude
+          setLocation({ latitude: lat, longitude: lng })
           setLocationLabel('your current location')
+          // Reverse geocode to get ZIP
+          try {
+            const res  = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+              { headers: { 'Accept-Language': 'en' } }
+            )
+            const data = await res.json()
+            const zipCode = data?.address?.postcode
+            if (zipCode) { setZip(zipCode.slice(0, 5)); setZipAutoFilled(true) }
+          } catch {
+            // ignore — ZIP field stays empty
+          }
         },
         () => setError('location_denied')
       )
@@ -268,7 +283,17 @@ export default function Resources() {
           </button>
         </div>
 
+        {zipAutoFilled && !error && (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <Info size={12} style={{ color: 'var(--muted)', flexShrink: 0 }} />
+            <p className="text-xs" style={{ color: 'var(--muted)' }}>
+              ZIP code is estimated from your location and may not be exact.
+            </p>
+          </div>
+        )}
+
         {/* Distance */}
+        <div className="mt-4"></div>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xs font-medium" style={{ color: 'var(--muted)', flexShrink: 0, minWidth: 60 }}>
             Within:
