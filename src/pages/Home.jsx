@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
       {/* Hero */}
-      <div className="text-center mb-12 max-w-lg">
+      <div className="text-center mb-12 max-w-2xl">
         <div className="flex justify-center mb-6">
           <div className="w-16 h-16 rounded-full flex items-center justify-center"
             style={{ background: 'var(--sage-light)' }}>
@@ -39,7 +39,7 @@ export default function Home() {
       </div>
 
       {/* Mode selection */}
-      <div className="flex flex-col gap-4 w-full max-w-sm">
+      <div className="flex flex-col gap-4 w-full max-w-lg">
         <ModeCard icon={<Heart size={22} />} title={t('modeQuickCheck')}
           description={t('modeQuickCheckDesc')} onClick={() => start('self')} primary />
         <ModeCard icon={<Users size={22} />} title={t('modeHelpNow')}
