@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage'
-import { Heart, Users, Shield } from 'lucide-react'
+import { Heart, Users, Shield, ClipboardList } from 'lucide-react'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -44,8 +44,11 @@ export default function Home() {
           description={t('modeQuickCheckDesc')} onClick={() => start('self')} primary />
         <ModeCard icon={<Users size={22} />} title={t('modeHelpNow')}
           description={t('modeHelpNowDesc')} onClick={() => startCrisis()} urgent />
+        <ModeCard icon={<ClipboardList size={22} />} title={t('mySafetyPlan')}
+          description={t('mySafetyPlanDesc')} onClick={() => navigate('/safety-plan')} steel />
+
         <ModeCard icon={<Shield size={22} />} title={t('modeWorriedAbout')}
-          description={t('modeWorriedAboutDesc')} onClick={() => start('proxy')} />
+          description={t('modeWorriedAboutDesc')} onClick={() => start('proxy')} mauve />
       </div>
 
       <p className="mt-10 text-sm" style={{ color: 'var(--muted)' }}>
@@ -54,14 +57,15 @@ export default function Home() {
           {t('callOrText988')}
         </a>
       </p>
+
     </div>
   )
 }
 
-function ModeCard({ icon, title, description, onClick, primary, urgent }) {
-  const bg = urgent ? 'var(--high)' : primary ? 'var(--sage-dark)' : 'var(--white)'
-  const color = urgent || primary ? 'var(--white)' : 'var(--charcoal)'
-  const border = urgent || primary ? 'none' : '1px solid var(--sand-dark)'
+function ModeCard({ icon, title, description, onClick, primary, urgent, steel, mauve }) {
+  const bg = urgent ? 'var(--high)' : primary ? 'var(--sage-dark)' : steel ? '#4A7A9B' : mauve ? '#7A6B8A' : 'var(--white)'
+  const color = urgent || primary || steel || mauve ? 'var(--white)' : 'var(--charcoal)'
+  const border = urgent || primary || steel || mauve ? 'none' : '1px solid var(--sand-dark)'
   return (
     <button onClick={onClick} className="w-full text-left px-5 py-4 rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
       style={{ background: bg, color, border, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>

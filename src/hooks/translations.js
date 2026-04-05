@@ -8,6 +8,7 @@ export const translations = {
     // Layout
     appName: 'SafePoint',
     mySafetyPlan: 'My Safety Plan',
+    mySafetyPlanDesc: 'Create or review your personal crisis safety plan',
     footerText: 'SafePoint does not store personal information. For mental health crisis call',
     footerOr: 'or for emergencies',
 
@@ -142,6 +143,7 @@ export const translations = {
     // Layout
     appName: 'SafePoint',
     mySafetyPlan: 'Mi Plan de Seguridad',
+    mySafetyPlanDesc: 'Crea o revisa tu plan de seguridad personal para crisis',
     footerText: 'SafePoint no almacena información personal. Para crisis de salud mental llame al',
     footerOr: 'o para emergencias',
 

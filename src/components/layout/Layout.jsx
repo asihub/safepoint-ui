@@ -61,15 +61,7 @@ export default function Layout() {
             ))}
           </div>
 
-          {!isHome && (
-            <button
-              onClick={() => navigate('/safety-plan')}
-              className="text-sm px-3 py-1.5 rounded-full border transition-colors hover:opacity-80"
-              style={{ borderColor: 'var(--sage)', color: 'var(--sage-dark)', fontSize: '0.8rem' }}
-            >
-              {t('mySafetyPlan')}
-            </button>
-          )}
+
         </div>
       </header>
 
