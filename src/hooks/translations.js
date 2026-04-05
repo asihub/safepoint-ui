@@ -37,6 +37,7 @@ export const translations = {
     answerMoreThanHalf: 'More than half the days',
     answerNearlyEvery: 'Nearly every day',
     back: 'Back',
+    prev: 'Prev',
     next: 'Next',
 
     // FreeText
@@ -172,6 +173,7 @@ export const translations = {
     answerMoreThanHalf: 'Más de la mitad de los días',
     answerNearlyEvery: 'Casi todos los días',
     back: 'Atrás',
+    prev: 'Anterior',
     next: 'Siguiente',
 
     // FreeText

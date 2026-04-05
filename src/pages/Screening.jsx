@@ -277,9 +277,14 @@ export default function Screening() {
       {/* Navigation */}
       <div className="flex gap-3 mt-8">
         <button onClick={handleBack}
-          className="flex items-center gap-1 px-4 py-3 rounded-xl border"
-          style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}>
-          <ChevronLeft size={18} /> {t('back')}
+          disabled={qIndex === 0 && aIndex === 0}
+          className="flex items-center gap-1 px-4 py-3 rounded-xl font-medium transition-all"
+          style={{
+            background: qIndex === 0 && aIndex === 0 ? 'var(--sand-dark)' : 'var(--sage-dark)',
+            color:      qIndex === 0 && aIndex === 0 ? 'var(--muted)' : 'var(--white)',
+            border:     'none',
+          }}>
+          <ChevronLeft size={18} /> {t('prev')}
         </button>
         <button onClick={handleNext} disabled={selected === undefined}
           className="flex-1 flex items-center justify-center gap-1 px-4 py-3 rounded-xl font-medium transition-all"
