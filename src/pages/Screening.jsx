@@ -218,6 +218,16 @@ export default function Screening() {
   return (
     <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-6 py-8">
 
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate('/')} style={{ color: 'var(--muted)' }}>
+          <ChevronLeft size={22} />
+        </button>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
+          {isProxy ? t('modeWorriedAbout') : t('modeQuickCheck')}
+        </h2>
+      </div>
+
       {/* Proxy mode banner */}
       {isProxy && (
         <div className="rounded-xl px-4 py-2 mb-6 text-sm"
