@@ -42,8 +42,14 @@ export default function FreeText() {
   const { assessment, setFreeText, setResult, setConcerns } = useAssessmentContext()
   const { t, lang } = useLanguage()
 
-  const [text,          setText]          = useState(assessment.freeText || '')
-  const [selected,      setSelected]      = useState(new Set(assessment.concerns || []))
+  const [text,          setText]          = useState(() => {
+    const saved = JSON.parse(localStorage.getItem('sp_progress') || '{}')
+    return saved.freeText || assessment.freeText || ''
+  })
+  const [selected,      setSelected]      = useState(() => {
+    const saved = JSON.parse(localStorage.getItem('sp_progress') || '{}')
+    return new Set(saved.concerns || assessment.concerns || [])
+  })
   const [dropdownOpen,  setDropdownOpen]  = useState(false)
   const [loading,       setLoading]       = useState(false)
   const [error,         setError]         = useState(null)
@@ -232,7 +238,17 @@ export default function FreeText() {
       {error && <p className="text-sm mb-4" style={{ color: 'var(--high)' }}>{error}</p>}
 
       <div className="flex gap-3">
-        <button onClick={() => navigate(-1)}
+        <button onClick={() => {
+            // Persist current freeText and concerns before going back
+            const existing = JSON.parse(localStorage.getItem('sp_progress') || '{}')
+            localStorage.setItem('sp_progress', JSON.stringify({
+              ...existing,
+              freeText: text,
+              concerns: [...selected],
+              timestamp: Date.now(),
+            }))
+            navigate(-1)
+          }}
           className="flex items-center gap-1 px-4 py-3 rounded-xl font-medium transition-all"
           style={{ background: 'var(--sage-dark)', color: 'var(--white)', border: 'none' }}>
           <ChevronLeft size={18} /> {t('back')}
