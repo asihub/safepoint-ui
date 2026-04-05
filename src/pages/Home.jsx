@@ -1,10 +1,24 @@
 import { useNavigate } from 'react-router-dom'
+import { loadProgress, clearProgress } from '../utils/screeningProgress'
+import { useState, useEffect } from 'react'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage'
-import { Heart, Users, Shield, ClipboardList } from 'lucide-react'
+import { Heart, Users, Shield, ClipboardList, PlayCircle } from 'lucide-react'
 
 export default function Home() {
   const navigate = useNavigate()
+  const [savedProgress, setSavedProgress] = useState(null)
+
+  useEffect(() => {
+    setSavedProgress(loadProgress())
+  }, [])
+
+  const handleResume = () => {
+    // Don't clear progress — Screening will restore it
+    setMode(savedProgress.mode || 'self')
+    navigate('/screening')
+  }
+
   const { setMode, reset } = useAssessmentContext()
   const { t } = useLanguage()
 
@@ -39,6 +53,28 @@ export default function Home() {
       </div>
 
       {/* Mode selection */}
+      {/* In-progress assessment banner */}
+      {savedProgress && (
+        <div className="w-full max-w-lg rounded-2xl p-4 mb-2"
+          style={{ background: 'var(--white)', border: '1px solid var(--sage)' }}>
+          <p className="text-sm font-medium mb-3" style={{ color: 'var(--charcoal)' }}>
+            You have an assessment in progress
+          </p>
+          <div className="flex gap-2">
+            <button onClick={handleResume}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium"
+              style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
+              <PlayCircle size={16} /> Continue
+            </button>
+            <button onClick={() => { clearProgress(); setSavedProgress(null) }}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm border"
+              style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-4 w-full max-w-lg">
         <ModeCard icon={<Heart size={22} />} title={t('modeQuickCheck')}
           description={t('modeQuickCheckDesc')} onClick={() => start('self')} primary />

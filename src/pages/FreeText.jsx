@@ -88,6 +88,7 @@ export default function FreeText() {
         lang,
       })
       setResult(result)
+      localStorage.removeItem('sp_progress')
       navigate('/results')
     } catch {
       setError('Something went wrong. Please try again.')
@@ -231,9 +232,9 @@ export default function FreeText() {
       {error && <p className="text-sm mb-4" style={{ color: 'var(--high)' }}>{error}</p>}
 
       <div className="flex gap-3">
-        <button onClick={() => navigate('/screening')}
-          className="flex items-center gap-1 px-4 py-3 rounded-xl border"
-          style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}>
+        <button onClick={() => navigate(-1)}
+          className="flex items-center gap-1 px-4 py-3 rounded-xl font-medium transition-all"
+          style={{ background: 'var(--sage-dark)', color: 'var(--white)', border: 'none' }}>
           <ChevronLeft size={18} /> {t('back')}
         </button>
         <button onClick={handleSubmit} disabled={loading}
@@ -241,7 +242,7 @@ export default function FreeText() {
           style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
           {loading
             ? <><Loader2 size={18} className="animate-spin" /> {t('analyzing')}</>
-            : <>{t('seeMyResults')} <ChevronRight size={18} /></>}
+            : <>{t('submitAndSeeResults')} <ChevronRight size={18} /></>}
         </button>
       </div>
     </div>

@@ -45,6 +45,7 @@ export const translations = {
     freeTextSubtitle: 'Optional — describe what\'s on your mind in your own words. This helps the AI understand your situation better.',
     freeTextPlaceholder: 'You can write anything here — there are no right or wrong answers...',
     seeMyResults: 'See my results',
+    submitAndSeeResults: 'Submit & See Results',
     analyzing: 'Analyzing...',
 
     // Results
@@ -181,6 +182,7 @@ export const translations = {
     freeTextSubtitle: 'Opcional — describe lo que tienes en mente con tus propias palabras. Esto ayuda a la IA a entender mejor tu situación.',
     freeTextPlaceholder: 'Puedes escribir lo que quieras aquí — no hay respuestas correctas o incorrectas...',
     seeMyResults: 'Ver mis resultados',
+    submitAndSeeResults: 'Enviar y Ver Resultados',
     analyzing: 'Analizando...',
 
     // Results

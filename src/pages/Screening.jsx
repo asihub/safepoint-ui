@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage.jsx'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
+import { saveProgress, clearProgress, loadProgress } from '../utils/screeningProgress'
 
-// PHQ-9 questions — English and Spanish, self and proxy
 const PHQ9_QUESTIONS = {
   en: {
     self:  [
@@ -56,7 +56,6 @@ const PHQ9_QUESTIONS = {
   },
 }
 
-// GAD-7 questions — English and Spanish, self and proxy
 const GAD7_QUESTIONS = {
   en: {
     self:  [
@@ -100,7 +99,6 @@ const GAD7_QUESTIONS = {
   },
 }
 
-// LOINC codes — same regardless of language
 const PHQ9_LOINC = [
   { linkId: 'phq9-q1', code: '44250-9' },
   { linkId: 'phq9-q2', code: '44255-8' },
@@ -137,6 +135,8 @@ const ANSWER_OPTIONS_ES = [
   { label: 'Casi todos los días',          value: 3 },
 ]
 
+
+
 export default function Screening() {
   const navigate = useNavigate()
   const { setScore, setAnswers, assessment } = useAssessmentContext()
@@ -145,7 +145,6 @@ export default function Screening() {
   const isProxy = assessment.mode === 'proxy'
   const mode    = isProxy ? 'proxy' : 'self'
 
-  // Build questionnaires with current language and mode
   const QUESTIONNAIRES = [
     {
       key:        'phq9',
@@ -165,21 +164,35 @@ export default function Screening() {
 
   const OPTIONS = lang === 'es' ? ANSWER_OPTIONS_ES : ANSWER_OPTIONS_EN
 
-  const [qIndex, setQIndex]           = useState(0)
-  const [aIndex, setAIndex]           = useState(0)
-  const [answers, setAnswersLocal]    = useState({})
+  // Always start from the beginning — progress is only resumed from Home
+  const [qIndex, setQIndex]        = useState(0)
+  const [aIndex, setAIndex]        = useState(0)
+  const [answers, setAnswersLocal] = useState({})
 
-  const q               = QUESTIONNAIRES[qIndex]
-  const totalQuestions  = QUESTIONNAIRES.reduce((s, q) => s + q.questions.length, 0)
-  const answeredSoFar   = QUESTIONNAIRES.slice(0, qIndex).reduce((s, q) => s + q.questions.length, 0) + aIndex
-  const progress        = Math.round((answeredSoFar / totalQuestions) * 100)
-  const currentAnswers  = answers[q.key] || []
-  const selected        = currentAnswers[aIndex]
+  // If assessment context has a saved position (set by Home resume), restore it once
+  useEffect(() => {
+    const saved = loadProgress()
+    if (saved && saved.mode === assessment.mode) {
+      setQIndex(saved.qIndex || 0)
+      setAIndex(saved.aIndex || 0)
+      setAnswersLocal(saved.answers || {})
+    }
+  }, [])
+
+  const q              = QUESTIONNAIRES[qIndex]
+  const totalQuestions = QUESTIONNAIRES.reduce((s, q) => s + q.questions.length, 0)
+  const answeredSoFar  = QUESTIONNAIRES.slice(0, qIndex).reduce((s, q) => s + q.questions.length, 0) + aIndex
+  const progress       = Math.round((answeredSoFar / totalQuestions) * 100)
+  const currentAnswers = answers[q.key] || []
+  const selected       = currentAnswers[aIndex]
 
   const handleSelect = (value) => {
     const updated = [...currentAnswers]
     updated[aIndex] = value
-    setAnswersLocal(prev => ({ ...prev, [q.key]: updated }))
+    const newAnswers = { ...answers, [q.key]: updated }
+    setAnswersLocal(newAnswers)
+    // Save progress on every answer
+    saveProgress({ qIndex, aIndex, answers: newAnswers, mode: assessment.mode })
   }
 
   const handleNext = () => {
@@ -188,17 +201,23 @@ export default function Screening() {
     allAnswers[aIndex] = selected
 
     if (aIndex < q.questions.length - 1) {
-      setAnswersLocal(prev => ({ ...prev, [q.key]: allAnswers }))
+      const newAnswers = { ...answers, [q.key]: allAnswers }
+      setAnswersLocal(newAnswers)
       setAIndex(aIndex + 1)
+      saveProgress({ qIndex, aIndex: aIndex + 1, answers: newAnswers, mode: assessment.mode })
     } else {
       const score = allAnswers.reduce((s, v) => s + (v || 0), 0)
       setScore(q.key, score)
       setAnswers(q.key, allAnswers)
 
       if (qIndex < QUESTIONNAIRES.length - 1) {
+        const newAnswers = { ...answers, [q.key]: allAnswers }
+        setAnswersLocal(newAnswers)
         setQIndex(qIndex + 1)
         setAIndex(0)
+        saveProgress({ qIndex: qIndex + 1, aIndex: 0, answers: newAnswers, mode: assessment.mode })
       } else {
+        // All questionnaires done — go to free text (don't clear progress yet, clear on Submit)
         navigate('/text')
       }
     }
@@ -207,9 +226,12 @@ export default function Screening() {
   const handleBack = () => {
     if (aIndex > 0) {
       setAIndex(aIndex - 1)
+      saveProgress({ qIndex, aIndex: aIndex - 1, answers, mode: assessment.mode })
     } else if (qIndex > 0) {
+      const prevAIndex = QUESTIONNAIRES[qIndex - 1].questions.length - 1
       setQIndex(qIndex - 1)
-      setAIndex(QUESTIONNAIRES[qIndex - 1].questions.length - 1)
+      setAIndex(prevAIndex)
+      saveProgress({ qIndex: qIndex - 1, aIndex: prevAIndex, answers, mode: assessment.mode })
     } else {
       navigate('/')
     }
@@ -263,10 +285,10 @@ export default function Screening() {
             <button key={opt.value} onClick={() => handleSelect(opt.value)}
               className="w-full text-left px-4 py-3.5 rounded-xl border transition-all"
               style={{
-                background:   selected === opt.value ? 'var(--sage-dark)' : 'var(--white)',
-                color:        selected === opt.value ? 'var(--white)'     : 'var(--charcoal)',
-                borderColor:  selected === opt.value ? 'var(--sage-dark)' : 'var(--sand-dark)',
-                fontWeight:   selected === opt.value ? 500 : 400,
+                background:  selected === opt.value ? 'var(--sage-dark)' : 'var(--white)',
+                color:       selected === opt.value ? 'var(--white)'     : 'var(--charcoal)',
+                borderColor: selected === opt.value ? 'var(--sage-dark)' : 'var(--sand-dark)',
+                fontWeight:  selected === opt.value ? 500 : 400,
               }}>
               {opt.label}
             </button>
@@ -281,7 +303,7 @@ export default function Screening() {
           className="flex items-center gap-1 px-4 py-3 rounded-xl font-medium transition-all"
           style={{
             background: qIndex === 0 && aIndex === 0 ? 'var(--sand-dark)' : 'var(--sage-dark)',
-            color:      qIndex === 0 && aIndex === 0 ? 'var(--muted)' : 'var(--white)',
+            color:      'var(--white)',
             border:     'none',
           }}>
           <ChevronLeft size={18} /> {t('prev')}
