@@ -123,9 +123,15 @@ export default function FreeText() {
 
   return (
     <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-6 py-8">
-      <h2 className="mb-2" style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.6rem' }}>
-        {t('howAreYouFeeling')}
-      </h2>
+      {/* Header — same style as Screening */}
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate('/')} style={{ color: 'var(--muted)' }}>
+          <ChevronLeft size={22} />
+        </button>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
+          {t('howAreYouFeeling')}
+        </h2>
+      </div>
       <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>
         {t('freeTextSubtitle')}
       </p>
