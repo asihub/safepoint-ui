@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage.jsx'
@@ -164,20 +164,19 @@ export default function Screening() {
 
   const OPTIONS = lang === 'es' ? ANSWER_OPTIONS_ES : ANSWER_OPTIONS_EN
 
-  // Always start from the beginning — progress is only resumed from Home
-  const [qIndex, setQIndex]        = useState(0)
-  const [aIndex, setAIndex]        = useState(0)
-  const [answers, setAnswersLocal] = useState({})
-
-  // If assessment context has a saved position (set by Home resume), restore it once
-  useEffect(() => {
+  // Restore from localStorage on every mount (survives refresh)
+  const [qIndex, setQIndex]        = useState(() => {
     const saved = loadProgress()
-    if (saved && saved.mode === assessment.mode) {
-      setQIndex(saved.qIndex || 0)
-      setAIndex(saved.aIndex || 0)
-      setAnswersLocal(saved.answers || {})
-    }
-  }, [])
+    return saved?.qIndex || 0
+  })
+  const [aIndex, setAIndex]        = useState(() => {
+    const saved = loadProgress()
+    return saved?.aIndex || 0
+  })
+  const [answers, setAnswersLocal] = useState(() => {
+    const saved = loadProgress()
+    return saved?.answers || {}
+  })
 
   const q              = QUESTIONNAIRES[qIndex]
   const totalQuestions = QUESTIONNAIRES.reduce((s, q) => s + q.questions.length, 0)
