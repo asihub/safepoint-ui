@@ -5,7 +5,7 @@ import { useLanguage } from '../hooks/useLanguage.jsx'
 import ExportPdf from '../components/ExportPdf'
 import WellnessResources from '../components/WellnessResources'
 import ExportFhir from '../components/ExportFhir'
-import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Brain, BarChart2, Tag } from 'lucide-react'
+import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Brain, BarChart2, Tag, ChevronLeft } from 'lucide-react'
 
 const STORAGE_KEY = 'safepoint_history'
 const MAX_ENTRIES = 30
@@ -61,6 +61,16 @@ export default function Results() {
 
   return (
     <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-6 py-8">
+
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate('/')} style={{ color: 'var(--muted)' }}>
+          <ChevronLeft size={22} />
+        </button>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
+          {t('myResults')}
+        </h2>
+      </div>
 
       {/* Risk badge */}
       <div className="rounded-2xl p-5 mb-6 flex items-start gap-4"

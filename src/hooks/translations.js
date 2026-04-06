@@ -46,6 +46,7 @@ export const translations = {
     freeTextPlaceholder: 'You can write anything here — there are no right or wrong answers...',
     seeMyResults: 'See my results',
     submitAndSeeResults: 'Submit & See Results',
+    myResults: 'My Results',
     analyzing: 'Analyzing...',
 
     // Results
@@ -183,6 +184,7 @@ export const translations = {
     freeTextPlaceholder: 'Puedes escribir lo que quieras aquí — no hay respuestas correctas o incorrectas...',
     seeMyResults: 'Ver mis resultados',
     submitAndSeeResults: 'Enviar y Ver Resultados',
+    myResults: 'Mis Resultados',
     analyzing: 'Analizando...',
 
     // Results
