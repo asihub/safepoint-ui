@@ -14,9 +14,12 @@ export default function Home() {
   }, [])
 
   const handleResume = () => {
-    // Don't clear progress — Screening will restore it
     setMode(savedProgress.mode || 'self')
-    navigate('/screening')
+    if (savedProgress.stage === 'freetext') {
+      navigate('/text')
+    } else {
+      navigate('/screening')
+    }
   }
 
   const { setMode, reset } = useAssessmentContext()
@@ -54,26 +57,47 @@ export default function Home() {
 
       {/* Mode selection */}
       {/* In-progress assessment banner */}
-      {savedProgress && (
-        <div className="w-full max-w-lg rounded-2xl p-4 mb-2"
-          style={{ background: 'var(--white)', border: '1px solid var(--sage)' }}>
-          <p className="text-sm font-medium mb-3" style={{ color: 'var(--charcoal)' }}>
-            You have an assessment in progress
-          </p>
-          <div className="flex gap-2">
-            <button onClick={handleResume}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium"
-              style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
-              <PlayCircle size={16} /> Continue
-            </button>
-            <button onClick={() => { clearProgress(); setSavedProgress(null) }}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm border"
-              style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}>
-              Cancel
-            </button>
+      {savedProgress && (() => {
+        const PHQ9_LEN = 9, GAD7_LEN = 7, TOTAL = 16
+        const { qIndex = 0, aIndex = 0, stage: progressStage } = savedProgress
+        let pct, stageLabel
+        if (progressStage === 'freetext') {
+          pct = 95
+          stageLabel = 'Describing how you feel'
+        } else {
+          const answered = qIndex === 0 ? aIndex : PHQ9_LEN + aIndex
+          pct = Math.round((answered / TOTAL) * 100)
+          stageLabel = qIndex === 0 ? 'Depression screening' : 'Anxiety screening'
+        }
+        return (
+          <div className="w-full max-w-lg rounded-2xl p-4 mb-2"
+            style={{ background: 'var(--white)', border: '1px solid var(--sage)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium" style={{ color: 'var(--charcoal)' }}>
+                Assessment in progress
+              </p>
+              <span className="text-xs" style={{ color: 'var(--muted)' }}>{pct}%</span>
+            </div>
+            <div className="h-1.5 rounded-full mb-1" style={{ background: 'var(--sand-dark)' }}>
+              <div className="h-full rounded-full transition-all"
+                style={{ width: `${pct}%`, background: 'var(--sage)' }} />
+            </div>
+            <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>{stageLabel}</p>
+            <div className="flex gap-2">
+              <button onClick={handleResume}
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium"
+                style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
+                <PlayCircle size={16} /> Continue
+              </button>
+              <button onClick={() => { clearProgress(); setSavedProgress(null) }}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm border"
+                style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}>
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       <div className="flex flex-col gap-4 w-full max-w-lg">
         <ModeCard icon={<Heart size={22} />} title={t('modeQuickCheck')}

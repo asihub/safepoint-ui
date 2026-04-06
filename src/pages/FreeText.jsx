@@ -44,16 +44,31 @@ export default function FreeText() {
 
   const [text,          setText]          = useState(() => {
     const saved = JSON.parse(localStorage.getItem('sp_progress') || '{}')
-    return saved.freeText || assessment.freeText || ''
+    if (saved.freeText !== undefined) return saved.freeText
+    return assessment.freeText || ''
   })
   const [selected,      setSelected]      = useState(() => {
     const saved = JSON.parse(localStorage.getItem('sp_progress') || '{}')
-    return new Set(saved.concerns || assessment.concerns || [])
+    if (saved.concerns !== undefined) return new Set(saved.concerns)
+    return new Set(assessment.concerns || [])
   })
   const [dropdownOpen,  setDropdownOpen]  = useState(false)
   const [loading,       setLoading]       = useState(false)
   const [error,         setError]         = useState(null)
   const dropdownRef = useRef(null)
+
+  // Auto-save freeText and concerns to sp_progress on every change
+  useEffect(() => {
+    const existing = JSON.parse(localStorage.getItem('sp_progress') || '{}')
+    if (Object.keys(existing).length === 0) return // don't save if no assessment in progress
+    localStorage.setItem('sp_progress', JSON.stringify({
+      ...existing,
+      freeText: text,
+      concerns: [...selected],
+      stage: 'freetext',
+      timestamp: Date.now(),
+    }))
+  }, [text, selected])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -239,19 +254,23 @@ export default function FreeText() {
 
       <div className="flex gap-3">
         <button onClick={() => {
-            // Persist current freeText and concerns before going back
+            // Save freeText and concerns, go back to last GAD-7 question
             const existing = JSON.parse(localStorage.getItem('sp_progress') || '{}')
             localStorage.setItem('sp_progress', JSON.stringify({
               ...existing,
               freeText: text,
               concerns: [...selected],
+              // Put back to last GAD-7 question (qIndex=1, aIndex=6)
+              qIndex: 1,
+              aIndex: 6,
+              stage: 'screening',
               timestamp: Date.now(),
             }))
-            navigate(-1)
+            navigate('/screening')
           }}
           className="flex items-center gap-1 px-4 py-3 rounded-xl font-medium transition-all"
           style={{ background: 'var(--sage-dark)', color: 'var(--white)', border: 'none' }}>
-          <ChevronLeft size={18} /> {t('back')}
+          <ChevronLeft size={18} /> {t('prev')}
         </button>
         <button onClick={handleSubmit} disabled={loading}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium"

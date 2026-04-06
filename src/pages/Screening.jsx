@@ -192,7 +192,7 @@ export default function Screening() {
     const newAnswers = { ...answers, [q.key]: updated }
     setAnswersLocal(newAnswers)
     // Save progress on every answer
-    saveProgress({ qIndex, aIndex, answers: newAnswers, mode: assessment.mode })
+    saveProgress({ qIndex, aIndex, answers: newAnswers, mode: assessment.mode, stage: 'screening' })
   }
 
   const handleNext = () => {
@@ -204,7 +204,7 @@ export default function Screening() {
       const newAnswers = { ...answers, [q.key]: allAnswers }
       setAnswersLocal(newAnswers)
       setAIndex(aIndex + 1)
-      saveProgress({ qIndex, aIndex: aIndex + 1, answers: newAnswers, mode: assessment.mode })
+      saveProgress({ qIndex, aIndex: aIndex + 1, answers: newAnswers, mode: assessment.mode, stage: 'screening' })
     } else {
       const score = allAnswers.reduce((s, v) => s + (v || 0), 0)
       setScore(q.key, score)
@@ -215,9 +215,15 @@ export default function Screening() {
         setAnswersLocal(newAnswers)
         setQIndex(qIndex + 1)
         setAIndex(0)
-        saveProgress({ qIndex: qIndex + 1, aIndex: 0, answers: newAnswers, mode: assessment.mode })
+        saveProgress({ qIndex: qIndex + 1, aIndex: 0, answers: newAnswers, mode: assessment.mode, stage: 'screening' })
       } else {
-        // All questionnaires done — go to free text (don't clear progress yet, clear on Submit)
+        // All questionnaires done — update stage to freetext, preserve existing freeText/concerns
+        const existing = JSON.parse(localStorage.getItem('sp_progress') || '{}')
+        localStorage.setItem('sp_progress', JSON.stringify({
+          ...existing,
+          stage: 'freetext',
+          timestamp: Date.now(),
+        }))
         navigate('/text')
       }
     }
@@ -226,12 +232,12 @@ export default function Screening() {
   const handleBack = () => {
     if (aIndex > 0) {
       setAIndex(aIndex - 1)
-      saveProgress({ qIndex, aIndex: aIndex - 1, answers, mode: assessment.mode })
+      saveProgress({ qIndex, aIndex: aIndex - 1, answers, mode: assessment.mode, stage: 'screening' })
     } else if (qIndex > 0) {
       const prevAIndex = QUESTIONNAIRES[qIndex - 1].questions.length - 1
       setQIndex(qIndex - 1)
       setAIndex(prevAIndex)
-      saveProgress({ qIndex: qIndex - 1, aIndex: prevAIndex, answers, mode: assessment.mode })
+      saveProgress({ qIndex: qIndex - 1, aIndex: prevAIndex, answers, mode: assessment.mode, stage: 'screening' })
     } else {
       navigate('/')
     }
