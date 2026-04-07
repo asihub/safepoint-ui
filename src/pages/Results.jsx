@@ -246,11 +246,6 @@ export default function Results() {
           style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
           <MapPin size={18} /> {t('findSupportNearMe')}
         </button>
-        <button onClick={() => navigate('/safety-plan')}
-          className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium"
-          style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}>
-          <FileText size={18} /> {t('buildMySafetyPlan')}
-        </button>
         <button onClick={() => navigate('/progress')}
           className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium"
           style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}>
