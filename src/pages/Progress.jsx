@@ -26,7 +26,8 @@ export default function Progress() {
   const [history, setHistory] = useState(readHistory)
   const [page, setPage]       = useState(1)
   const [expandedId, setExpandedId]   = useState(null)
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId]   = useState(null)
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
   const PAGE_SIZE = 10
 
   const deleteEntry = (id) => {
@@ -88,9 +89,10 @@ export default function Progress() {
         <button onClick={() => navigate(-1)} style={{ color: 'var(--muted)' }}>
           <ChevronLeft size={22} />
         </button>
-        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem', flex: 1 }}>
           My Progress
         </h2>
+
       </div>
 
       {/* Trend summary */}
@@ -162,9 +164,32 @@ export default function Progress() {
         className="rounded-2xl mb-6"
         style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}
       >
-        <h3 className="text-sm font-semibold px-5 pt-4 pb-3" style={{ color: 'var(--charcoal)' }}>
-          Assessment history
-        </h3>
+        <div className="flex items-center px-5 pt-4 pb-3">
+          <h3 className="text-sm font-semibold flex-1" style={{ color: 'var(--charcoal)' }}>
+            Assessment history
+          </h3>
+          {confirmDeleteAll ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: 'var(--muted)' }}>Delete all?</span>
+              <button onClick={() => { clearHistory(); setConfirmDeleteAll(false) }}
+                className="text-xs px-2 py-0.5 rounded"
+                style={{ background: 'var(--high)', color: 'var(--white)', border: 'none', cursor: 'pointer' }}>
+                Delete
+              </button>
+              <button onClick={() => setConfirmDeleteAll(false)}
+                className="text-xs px-2 py-0.5 rounded border"
+                style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)', background: 'none', cursor: 'pointer' }}>
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setConfirmDeleteAll(true)}
+              className="flex items-center gap-1 text-xs"
+              style={{ color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <Trash2 size={13} /> Delete all
+            </button>
+          )}
+        </div>
         {/* Pagination controls — top */}
         {history.length > PAGE_SIZE && (
           <div className="flex items-center justify-between px-5 py-2"
@@ -291,25 +316,7 @@ export default function Progress() {
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => navigate('/')}
-          className="flex-1 py-3 rounded-xl font-medium"
-          style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}
-        >
-          New assessment
-        </button>
-        <button
-          onClick={() => {
-            if (window.confirm('Delete all history? This cannot be undone.')) clearHistory()
-          }}
-          className="px-4 py-3 rounded-xl border"
-          style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}
-        >
-          <Trash2 size={18} />
-        </button>
-      </div>
+
     </div>
   )
 }
