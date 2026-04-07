@@ -25,6 +25,7 @@ export default function Progress() {
   const navigate = useNavigate()
   const [history, setHistory] = useState(readHistory)
   const [page, setPage]       = useState(1)
+  const [expandedId, setExpandedId] = useState(null)
   const PAGE_SIZE = 10
 
   const clearHistory = () => {
@@ -65,6 +66,9 @@ export default function Progress() {
   const trendLabel = trend < 0 ? 'Improving' : trend > 0 ? 'Worsening' : 'Stable'
 
   const chartData = [...history].reverse().slice(-10)
+
+  const phq9Severity = (s) => s >= 20 ? 'Severe' : s >= 15 ? 'Moderately severe' : s >= 10 ? 'Moderate' : s >= 5 ? 'Mild' : 'Minimal'
+  const gad7Severity = (s) => s >= 15 ? 'Severe' : s >= 10 ? 'Moderate' : s >= 5 ? 'Mild' : 'Minimal'
   const chartHeight = 120
 
   return (
@@ -184,31 +188,72 @@ export default function Progress() {
             const timeStr = date.toLocaleTimeString('en-US', {
               hour: 'numeric', minute: '2-digit'
             })
+            const isExpanded = expandedId === entry.id
             return (
-              <div
-                key={entry.id}
-                className="flex items-center px-5 py-3 gap-3"
-                style={{ borderTop: i > 0 ? '1px solid var(--sand-dark)' : 'none' }}
-              >
-                <div className="flex-1">
-                  <div className="text-xs font-medium" style={{ color: 'var(--charcoal)' }}>
-                    {dateStr} · {timeStr}
+              <div key={entry.id}
+                style={{ borderTop: i > 0 ? '1px solid var(--sand-dark)' : 'none' }}>
+                {/* Row header — clickable */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : entry.id)}
+                  className="w-full flex items-center px-5 py-3 gap-3 text-left"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <div className="flex-1">
+                    <div className="text-xs font-medium" style={{ color: 'var(--charcoal)' }}>
+                      {dateStr} · {timeStr}
+                    </div>
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
-                    {entry.phq9Score != null && `PHQ-9: ${entry.phq9Score}`}
-                    {entry.phq9Score != null && entry.gad7Score != null && ' · '}
-                    {entry.gad7Score != null && `GAD-7: ${entry.gad7Score}`}
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full"
+                    style={{
+                      background: RISK_COLOR[entry.riskLevel] + '22',
+                      color: RISK_COLOR[entry.riskLevel],
+                    }}>
+                    {entry.riskLevel}
+                  </span>
+                  <span style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>
+                    {isExpanded ? '▲' : '▼'}
+                  </span>
+                </button>
+
+                {/* Expanded details */}
+                {isExpanded && (
+                  <div className="px-5 pb-4 pt-1"
+                    style={{ background: 'var(--sand)', borderTop: '1px solid var(--sand-dark)' }}>
+                    <div className="flex flex-col gap-2">
+                      {entry.phq9Score != null && (
+                        <div className="flex justify-between text-xs">
+                          <span style={{ color: 'var(--muted)' }}>PHQ-9 (Depression)</span>
+                          <span style={{ color: 'var(--charcoal)' }}>
+                            <strong>{entry.phq9Score}</strong>/27 — {phq9Severity(entry.phq9Score)}
+                          </span>
+                        </div>
+                      )}
+                      {entry.gad7Score != null && (
+                        <div className="flex justify-between text-xs">
+                          <span style={{ color: 'var(--muted)' }}>GAD-7 (Anxiety)</span>
+                          <span style={{ color: 'var(--charcoal)' }}>
+                            <strong>{entry.gad7Score}</strong>/21 — {gad7Severity(entry.gad7Score)}
+                          </span>
+                        </div>
+                      )}
+                      {entry.confidence != null && (
+                        <div className="flex justify-between text-xs">
+                          <span style={{ color: 'var(--muted)' }}>AI confidence</span>
+                          <span style={{ color: 'var(--charcoal)' }}>
+                            <strong>{Math.round(entry.confidence * 100)}%</strong>
+                          </span>
+                        </div>
+                      )}
+                      {entry.signals?.length > 0 && (
+                        <div className="flex justify-between text-xs">
+                          <span style={{ color: 'var(--muted)' }}>AI signals</span>
+                          <span style={{ color: 'var(--charcoal)' }}>
+                            {entry.signals.map(s => s.replace(/_/g, ' ')).join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <span
-                  className="text-xs font-semibold px-2 py-1 rounded-full"
-                  style={{
-                    background: RISK_COLOR[entry.riskLevel] + '22',
-                    color: RISK_COLOR[entry.riskLevel],
-                  }}
-                >
-                  {entry.riskLevel}
-                </span>
+                )}
               </div>
             )
           })}
