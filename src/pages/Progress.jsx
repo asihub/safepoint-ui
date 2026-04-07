@@ -25,8 +25,18 @@ export default function Progress() {
   const navigate = useNavigate()
   const [history, setHistory] = useState(readHistory)
   const [page, setPage]       = useState(1)
-  const [expandedId, setExpandedId] = useState(null)
+  const [expandedId, setExpandedId]   = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const PAGE_SIZE = 10
+
+  const deleteEntry = (id) => {
+    setHistory(prev => {
+      const updated = prev.filter(e => e.id !== id)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      return updated
+    })
+    if (expandedId === id) setExpandedId(null)
+  }
 
   const clearHistory = () => {
     localStorage.removeItem(STORAGE_KEY)
@@ -209,6 +219,26 @@ export default function Progress() {
                     }}>
                     {entry.riskLevel}
                   </span>
+                  {confirmDeleteId === entry.id ? (
+                    <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => { deleteEntry(entry.id); setConfirmDeleteId(null) }}
+                        className="text-xs px-2 py-0.5 rounded"
+                        style={{ background: 'var(--high)', color: 'var(--white)', border: 'none', cursor: 'pointer' }}>
+                        Delete
+                      </button>
+                      <button onClick={() => setConfirmDeleteId(null)}
+                        className="text-xs px-2 py-0.5 rounded border"
+                        style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)', background: 'none', cursor: 'pointer' }}>
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(entry.id) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--muted)', flexShrink: 0 }}>
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                   <span style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>
                     {isExpanded ? '▲' : '▼'}
                   </span>
@@ -252,6 +282,7 @@ export default function Progress() {
                         </div>
                       )}
                     </div>
+
                   </div>
                 )}
               </div>
