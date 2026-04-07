@@ -47,6 +47,7 @@ export const translations = {
     seeMyResults: 'See my results',
     submitAndSeeResults: 'Submit & See Results',
     myResults: 'My Results',
+    trackMyProgressDesc: 'View your assessment history and trends',
     analyzing: 'Analyzing...',
 
     // Results
@@ -185,6 +186,7 @@ export const translations = {
     seeMyResults: 'Ver mis resultados',
     submitAndSeeResults: 'Enviar y Ver Resultados',
     myResults: 'Mis Resultados',
+    trackMyProgressDesc: 'Ver tu historial de evaluaciones y tendencias',
     analyzing: 'Analizando...',
 
     // Results

@@ -3,7 +3,7 @@ import { loadProgress, clearProgress } from '../utils/screeningProgress'
 import { useState, useEffect } from 'react'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage'
-import { Heart, Users, Shield, ClipboardList, PlayCircle } from 'lucide-react'
+import { Heart, Users, Shield, ClipboardList, PlayCircle, TrendingUp } from 'lucide-react'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -104,6 +104,9 @@ export default function Home() {
           description={t('modeQuickCheckDesc')} onClick={() => start('self')} primary />
         <ModeCard icon={<Users size={22} />} title={t('modeHelpNow')}
           description={t('modeHelpNowDesc')} onClick={() => startCrisis()} urgent />
+        <ModeCard icon={<TrendingUp size={22} />} title={t('trackMyProgress')}
+          description={t('trackMyProgressDesc')} onClick={() => navigate('/progress')} steel />
+
         <ModeCard icon={<ClipboardList size={22} />} title={t('mySafetyPlan')}
           description={t('mySafetyPlanDesc')} onClick={() => navigate('/safety-plan')} steel />
 

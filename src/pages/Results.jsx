@@ -246,11 +246,6 @@ export default function Results() {
           style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
           <MapPin size={18} /> {t('findSupportNearMe')}
         </button>
-        <button onClick={() => navigate('/progress')}
-          className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium"
-          style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}>
-          <TrendingUp size={18} /> {t('trackMyProgress')}
-        </button>
         <ExportPdf result={result} />
         <ExportFhir result={result} />
       </div>
