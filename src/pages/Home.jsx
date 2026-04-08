@@ -108,7 +108,7 @@ export default function Home() {
           description={t('trackMyProgressDesc')} onClick={() => navigate('/progress')} steel />
 
         <ModeCard icon={<ClipboardList size={22} />} title={t('mySafetyPlan')}
-          description={t('mySafetyPlanDesc')} onClick={() => navigate('/safety-plan')} steel />
+          description={t('mySafetyPlanDesc')} onClick={() => navigate('/safety-plan')} teal />
 
         <ModeCard icon={<Shield size={22} />} title={t('modeWorriedAbout')}
           description={t('modeWorriedAboutDesc')} onClick={() => start('proxy')} mauve />
@@ -125,10 +125,10 @@ export default function Home() {
   )
 }
 
-function ModeCard({ icon, title, description, onClick, primary, urgent, steel, mauve }) {
-  const bg = urgent ? 'var(--high)' : primary ? 'var(--sage-dark)' : steel ? '#4A7A9B' : mauve ? '#7A6B8A' : 'var(--white)'
-  const color = urgent || primary || steel || mauve ? 'var(--white)' : 'var(--charcoal)'
-  const border = urgent || primary || steel || mauve ? 'none' : '1px solid var(--sand-dark)'
+function ModeCard({ icon, title, description, onClick, primary, urgent, steel, mauve, teal }) {
+  const bg = urgent ? 'var(--high)' : primary ? 'var(--sage-dark)' : steel ? '#4A7A9B' : mauve ? '#7A6B8A' : teal ? '#7A6B5A' : 'var(--white)'
+  const color = urgent || primary || steel || mauve || teal ? 'var(--white)' : 'var(--charcoal)'
+  const border = urgent || primary || steel || mauve || teal ? 'none' : '1px solid var(--sand-dark)'
   return (
     <button onClick={onClick} className="w-full text-left px-5 py-4 rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
       style={{ background: bg, color, border, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
