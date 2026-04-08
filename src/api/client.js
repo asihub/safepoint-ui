@@ -28,8 +28,8 @@ export const deleteSafetyPlan = (userCode, pin) =>
   client.delete('/safety-plan', { params: { userCode, pin } }).then(r => r.data)
 
 // Auth API
-export const registerUser = (pin) =>
-  client.post('/auth/register', { pin }).then(r => r.data)
+export const registerUser = (pin, username) =>
+  client.post('/auth/register', { pin, username }).then(r => r.data)
 
 export const verifyUser = (userCode, pin) =>
   client.post('/auth/verify', { userCode, pin }).then(r => r.data)
