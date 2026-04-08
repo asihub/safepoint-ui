@@ -35,3 +35,6 @@ export const verifyUser = (userCode, pin) =>
   client.post('/auth/verify', { userCode, pin }).then(r => r.data)
 
 export default client
+
+export const deleteUser = (userCode, pin) =>
+  client.delete('/auth/user', { data: { userCode, pin } }).then(r => r.data)
