@@ -31,10 +31,10 @@ export const deleteSafetyPlan = (userCode, pin) =>
 export const registerUser = (pin, username) =>
   client.post('/auth/register', { pin, username }).then(r => r.data)
 
-export const verifyUser = (userCode, pin) =>
-  client.post('/auth/verify', { userCode, pin }).then(r => r.data)
+export const verifyUser = (username, pin) =>
+  client.post('/auth/verify', { username, pin }).then(r => r.data)
 
 export default client
 
-export const deleteUser = (userCode, pin) =>
-  client.delete('/auth/user', { data: { userCode, pin } }).then(r => r.data)
+export const deleteUser = (username, pin) =>
+  client.delete('/auth/user', { data: { username, pin } }).then(r => r.data)

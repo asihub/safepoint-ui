@@ -12,8 +12,8 @@ function loadLocalUser() {
   } catch { return null }
 }
 
-function saveLocalUser(userCode) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ userCode }))
+function saveLocalUser(username) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ username }))
 }
 
 function clearLocalUser() {
@@ -52,7 +52,7 @@ export default function Auth() {
   // On mount — check localStorage
   useEffect(() => {
     const local = loadLocalUser()
-    if (local?.userCode) {
+    if (local?.username) {
       setUser(local)
       setMode('loggedIn')
     } else {
@@ -68,8 +68,8 @@ export default function Auth() {
     setLoading(true); setError(null)
     try {
       const data = await registerUser(pin, username.trim())
-      saveLocalUser(data.userCode)
-      setUser({ userCode: data.userCode })
+      saveLocalUser(data.username)
+      setUser({ username: data.username })
       setMode('loggedIn')
     } catch {
       setError('Registration failed. Please try again.')
@@ -78,16 +78,16 @@ export default function Auth() {
 
   // ── Sign in ───────────────────────────────────────────────────────────────
   const handleSignIn = async () => {
-    if (!userCode.trim() || !verifyPin.trim()) { setError('Please enter your code and PIN'); return }
+    if (!userCode.trim() || !verifyPin.trim()) { setError('Please enter your username and PIN'); return }
     setLoading(true); setError(null)
     try {
       const data = await verifyUser(userCode.trim(), verifyPin)
       if (data.valid) {
         saveLocalUser(userCode.trim())
-        setUser({ userCode: userCode.trim() })
+        setUser({ username: userCode.trim() })
         setMode('loggedIn')
       } else {
-        setError('Invalid code or PIN. Please try again.')
+        setError('Invalid username or PIN. Please try again.')
       }
     } catch {
       setError('Sign in failed. Please try again.')
@@ -98,7 +98,7 @@ export default function Auth() {
   const handleDelete = async () => {
     setLoading(true); setError(null)
     try {
-      await deleteUser(user.userCode, verifyPin)
+      await deleteUser(user.username, verifyPin)
       clearLocalUser()
       setUser(null)
       setConfirmDelete(false)
@@ -110,7 +110,7 @@ export default function Auth() {
   }
 
   const copyCode = () => {
-    navigator.clipboard.writeText(user.userCode)
+    navigator.clipboard.writeText(user.username)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -148,10 +148,10 @@ export default function Auth() {
                 <User size={18} style={{ color: 'var(--muted)' }} />
               </div>
               <div>
-                <p className="text-xs" style={{ color: 'var(--muted)' }}>Your anonymous code</p>
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>Your username</p>
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-semibold" style={{ color: 'var(--charcoal)' }}>
-                    {user.userCode}
+                    {user.username}
                   </span>
                   <button onClick={copyCode} style={{ color: 'var(--sage-dark)', background: 'none', border: 'none', cursor: 'pointer' }}>
                     {copied ? <CheckCircle size={15} /> : <Copy size={15} />}
@@ -160,7 +160,7 @@ export default function Auth() {
               </div>
             </div>
             <p className="text-xs" style={{ color: 'var(--muted)' }}>
-              Use this code and your PIN to access your safety plan from another device. No email or name is stored.
+              Use your username and PIN to access your data from another device. No email or name is stored.
             </p>
           </div>
 
@@ -208,19 +208,19 @@ export default function Auth() {
       {mode === 'choice' && (
         <div className="flex flex-col gap-4">
           <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
-            No email or name required. Your code and PIN are the only way to access your data.
+            No email or name required. Your username and PIN are the only way to access your data.
           </p>
           <button onClick={() => { setMode('register'); setError(null) }}
             className="flex flex-col items-start px-5 py-4 rounded-2xl font-medium text-left"
             style={{ background: 'var(--sage-dark)', color: 'var(--white)', border: 'none', cursor: 'pointer' }}>
             <span className="text-base">Create account</span>
-            <span className="text-xs font-normal mt-0.5" style={{ opacity: 0.8 }}>Get an anonymous code and PIN</span>
+            <span className="text-xs font-normal mt-0.5" style={{ opacity: 0.8 }}>Get an anonymous username and PIN</span>
           </button>
           <button onClick={() => { setMode('signin'); setError(null) }}
             className="flex flex-col items-start px-5 py-4 rounded-2xl font-medium text-left"
             style={{ background: 'var(--white)', color: 'var(--charcoal)', border: '1px solid var(--sand-dark)', cursor: 'pointer' }}>
-            <span className="text-base">I already have a code</span>
-            <span className="text-xs font-normal mt-0.5" style={{ color: 'var(--muted)' }}>Sign in with your code and PIN</span>
+            <span className="text-base">I already have an account</span>
+            <span className="text-xs font-normal mt-0.5" style={{ color: 'var(--muted)' }}>Sign in with your username and PIN</span>
           </button>
         </div>
       )}
@@ -292,7 +292,7 @@ export default function Auth() {
             ← Back
           </button>
           <input value={userCode} onChange={e => setUserCode(e.target.value)}
-            placeholder="Your code (e.g. pure-path-79)" autoComplete="off"
+            placeholder="Your username (e.g. pure-path-79)" autoComplete="off"
             className="w-full px-4 py-3 rounded-xl border outline-none text-sm"
             style={{ borderColor: 'var(--sand-dark)', fontFamily: "'DM Sans', sans-serif" }} />
           <input value={verifyPin} onChange={e => setVerifyPin(e.target.value)}

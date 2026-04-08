@@ -36,7 +36,7 @@ export default function SafetyPlan() {
       })
       setLoaded(true)
     } catch {
-      setError('No safety plan found for this code and PIN.')
+      setError('No safety plan found for this username and PIN.')
     } finally {
       setLoading(false)
     }
@@ -68,7 +68,7 @@ export default function SafetyPlan() {
       </h2>
       <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>
         Based on the Stanley-Brown Safety Planning Intervention.
-        Your plan is saved securely using your code and PIN only.
+        Your plan is saved securely using your username and PIN only.
       </p>
 
       {/* Credentials */}
@@ -77,7 +77,7 @@ export default function SafetyPlan() {
           <input
             value={userCode}
             onChange={e => setUserCode(e.target.value)}
-            placeholder="Your code (e.g. blue-river-42)"
+            placeholder="Your username (e.g. pure-path-79)"
             className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none"
             style={{ borderColor: 'var(--sand-dark)', fontFamily: "'DM Sans', sans-serif" }}
           />
@@ -99,7 +99,7 @@ export default function SafetyPlan() {
           Load existing plan
         </button>
         <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>
-          No account? Register at <a href="/auth" className="underline">Auth page</a> to get a code.
+          No account? Create one at <a href="/auth" className="underline">Auth page</a> to get a code.
         </p>
       </div>
 
