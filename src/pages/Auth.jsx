@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { registerUser, verifyUser } from '../api/client'
-import { Copy, CheckCircle, Loader2 } from 'lucide-react'
+import { Copy, CheckCircle, Loader2, ChevronLeft } from 'lucide-react'
 
 export default function Auth() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState('register')
   const [pin, setPin] = useState('')
   const [userCode, setUserCode] = useState('')
@@ -49,13 +51,15 @@ export default function Auth() {
   }
 
   return (
-    <div className="flex-1 flex flex-col max-w-sm mx-auto w-full px-6 py-8">
-      <h2
-        className="mb-2"
-        style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}
-      >
-        Anonymous Identity
-      </h2>
+    <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-6 py-8">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate('/')} style={{ color: 'var(--muted)' }}>
+          <ChevronLeft size={22} />
+        </button>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
+          Anonymous Identity
+        </h2>
+      </div>
       <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>
         No email or name required. Your code and PIN are the only way to access your data.
       </p>

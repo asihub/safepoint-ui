@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Shield } from 'lucide-react'
+import { Shield , User } from 'lucide-react'
 import { useLanguage } from '../../hooks/useLanguage'
 
 export default function Layout() {
@@ -10,7 +10,7 @@ export default function Layout() {
   // Disable language switcher during screening to prevent mid-questionnaire language change
   const isScreening = location.pathname === '/screening'
   // Show back-to-results button on secondary pages
-  const showBackToResults = ['/safety-plan', '/auth'].includes(location.pathname)
+  const showBackToResults = false
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--sand)' }}>
@@ -39,6 +39,11 @@ export default function Layout() {
         )}
 
         <div className="flex items-center gap-3">
+            <button onClick={() => navigate('/auth')}
+              className="flex items-center justify-center w-8 h-8 rounded-full border transition-colors hover:opacity-80"
+              style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}>
+              <User size={15} />
+            </button>
           {/* Language switcher — disabled during screening */}
           <div
             className="flex rounded-full overflow-hidden border text-xs font-medium"
