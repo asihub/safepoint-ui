@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { registerUser, verifyUser, deleteUser } from '../api/client'
-import { Copy, CheckCircle, Loader2, ChevronLeft, User, Trash2 } from 'lucide-react'
+import { Copy, CheckCircle, Loader2, ChevronLeft, User, Trash2, Info } from 'lucide-react'
 
 const STORAGE_KEY = 'sp_user'
 
@@ -20,6 +20,20 @@ function clearLocalUser() {
   localStorage.removeItem(STORAGE_KEY)
 }
 
+function generatePin() {
+  return String(Math.floor(1000 + Math.random() * 9000))
+}
+
+const ADJECTIVES = ['calm', 'bright', 'pure', 'safe', 'kind', 'warm', 'clear', 'soft', 'bold', 'wise']
+const NOUNS      = ['path', 'wave', 'step', 'hope', 'dawn', 'lake', 'peak', 'star', 'moon', 'tree']
+
+function generateUsername() {
+  const adj  = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
+  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)]
+  const num  = Math.floor(10 + Math.random() * 90)
+  return `${adj}-${noun}-${num}`
+}
+
 export default function Auth() {
   const navigate  = useNavigate()
   const [mode,    setMode]    = useState(null)      // null | 'loggedIn' | 'register' | 'signin'
@@ -30,7 +44,8 @@ export default function Auth() {
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   // Form fields
-  const [pin,       setPin]       = useState('')
+  const [username,  setUsername]  = useState(generateUsername)
+  const [pin,       setPin]       = useState(generatePin)
   const [userCode,  setUserCode]  = useState('')
   const [verifyPin, setVerifyPin] = useState('')
 
@@ -47,10 +62,12 @@ export default function Auth() {
 
   // ── Register ──────────────────────────────────────────────────────────────
   const handleRegister = async () => {
-    if (!/^\d{4,6}$/.test(pin)) { setError('PIN must be 4-6 digits'); return }
+    if (!username.trim()) { setError('Please enter or generate a username'); return }
+    if (!/^[a-z0-9-]{1,20}$/.test(username.trim())) { setError('Username must be max 20 characters: letters, digits and - only'); return }
+    if (!/^\d{4}$/.test(pin)) { setError('PIN must be exactly 4 digits'); return }
     setLoading(true); setError(null)
     try {
-      const data = await registerUser(pin)
+      const data = await registerUser(pin, username.trim())
       saveLocalUser(data.userCode)
       setUser({ userCode: data.userCode })
       setMode('loggedIn')
@@ -217,19 +234,51 @@ export default function Auth() {
             ← Back
           </button>
           <div>
-            <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--muted)' }}>
-              Choose a PIN (4-6 digits)
-            </label>
-            <input value={pin} onChange={e => setPin(e.target.value)}
-              type="password" maxLength={6} placeholder="e.g. 1234"
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-medium" style={{ color: 'var(--muted)' }}>
+                Username
+              </label>
+              <button onClick={() => setUsername(generateUsername())}
+                className="text-xs"
+                style={{ color: 'var(--sage-dark)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                Generate
+              </button>
+            </div>
+            <input value={username} onChange={e => setUsername(e.target.value)}
+              type="text" maxLength={20} placeholder="e.g. pure-path-79" autoComplete="off"
               className="w-full px-4 py-3 rounded-xl border outline-none"
               style={{ borderColor: 'var(--sand-dark)', fontFamily: "'DM Sans', sans-serif" }} />
+
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-medium" style={{ color: 'var(--muted)' }}>
+                PIN (4 digits)
+              </label>
+              <button onClick={() => setPin(generatePin())}
+                className="text-xs"
+                style={{ color: 'var(--sage-dark)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                Generate
+              </button>
+            </div>
+            <input value={pin} onChange={e => setPin(e.target.value)}
+              type="text" inputMode="numeric" maxLength={4} placeholder="e.g. 1234"
+              className="w-full px-4 py-3 rounded-xl border outline-none"
+              style={{ borderColor: 'var(--sand-dark)', fontFamily: "'DM Sans', sans-serif", letterSpacing: '0.15em' }} />
+
           </div>
           {error && <p className="text-sm" style={{ color: 'var(--high)' }}>{error}</p>}
+          <div className="flex items-start gap-2 mt-1"
+            style={{ borderTop: '1px solid var(--sand-dark)', paddingTop: '0.75rem' }}>
+            <Info size={13} style={{ color: 'var(--muted)', flexShrink: 0, marginTop: 1 }} />
+            <p className="text-xs" style={{ color: 'var(--muted)' }}>
+              Save your username and PIN — you will need them to access your data.
+            </p>
+          </div>
           <button onClick={handleRegister} disabled={loading}
             className="flex items-center justify-center gap-2 py-3 rounded-xl font-medium"
             style={{ background: 'var(--sage-dark)', color: 'var(--white)', border: 'none', cursor: 'pointer' }}>
-            {loading ? <Loader2 size={18} className="animate-spin" /> : 'Generate my code'}
+            {loading ? <Loader2 size={18} className="animate-spin" /> : 'Create Account'}
           </button>
         </div>
       )}
