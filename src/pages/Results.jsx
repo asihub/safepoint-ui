@@ -5,7 +5,7 @@ import { useLanguage } from '../hooks/useLanguage.jsx'
 import ExportPdf from '../components/ExportPdf'
 import WellnessResources from '../components/WellnessResources'
 import ExportFhir from '../components/ExportFhir'
-import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Brain, BarChart2, Tag, ChevronLeft } from 'lucide-react'
+import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Brain, BarChart2, ChevronLeft } from 'lucide-react'
 
 const STORAGE_KEY = 'safepoint_history'
 const MAX_ENTRIES = 30
@@ -122,32 +122,7 @@ export default function Results() {
       </div>
 
       {/* ── AI Text score ── */}
-      {/* ── Reported concerns ── */}
-      {assessment.concerns?.length > 0 && (
-        <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Tag size={16} style={{ color: 'var(--muted)' }} />
-            <h3 className="font-semibold text-sm" style={{ color: 'var(--charcoal)' }}>
-              Reported concerns
-            </h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {assessment.concerns.map(concern => {
-              const isHigh = ['Suicidal thoughts', 'Thoughts of self-harm'].includes(concern)
-              return (
-                <span key={concern} className="text-xs px-3 py-1 rounded-full"
-                  style={{
-                    background: isHigh ? '#FDECEA' : 'var(--sand-dark)',
-                    color:      isHigh ? '#a32d2d' : 'var(--muted)',
-                    fontWeight: isHigh ? 500 : 400,
-                  }}>
-                  {concern}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
+
 
       {result.aiAnalysis && (
         <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>

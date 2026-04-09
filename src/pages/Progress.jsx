@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAssessmentContext } from '../App'
+import { clearProgress } from '../utils/screeningProgress'
 import { TrendingDown, TrendingUp, Minus, Trash2, ChevronLeft } from 'lucide-react'
 
 const STORAGE_KEY = 'safepoint_history'
@@ -23,6 +25,7 @@ function readHistory() {
 
 export default function Progress() {
   const navigate = useNavigate()
+  const { setMode, reset } = useAssessmentContext()
   const [history, setHistory] = useState(readHistory)
   const [page, setPage]       = useState(1)
   const [expandedId, setExpandedId]   = useState(null)
@@ -58,7 +61,7 @@ export default function Progress() {
           Complete your first assessment to start tracking your progress over time.
         </p>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => { clearProgress(); reset(); setMode('self'); navigate('/screening') }}
           className="px-6 py-3 rounded-xl font-medium"
           style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}
         >
