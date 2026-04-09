@@ -43,7 +43,7 @@ export const translations = {
     // FreeText
     howAreYouFeeling: 'How are you feeling?',
     freeTextSubtitle: 'Optional — describe what\'s on your mind in your own words. This helps the AI understand your situation better.',
-    freeTextPlaceholder: 'You can write anything here — there are no right or wrong answers...',
+    freeTextPlaceholder: 'Describe how you have been feeling in your own words. The more detail you share, the better the AI can support your assessment...',
     seeMyResults: 'See my results',
     submitAndSeeResults: 'Submit & See Results',
     myResults: 'My Results',
@@ -182,7 +182,7 @@ export const translations = {
     // FreeText
     howAreYouFeeling: '¿Cómo te sientes?',
     freeTextSubtitle: 'Opcional — describe lo que tienes en mente con tus propias palabras. Esto ayuda a la IA a entender mejor tu situación.',
-    freeTextPlaceholder: 'Puedes escribir lo que quieras aquí — no hay respuestas correctas o incorrectas...',
+    freeTextPlaceholder: 'Describe cómo te has sentido con tus propias palabras. Cuanto más detalle compartas, mejor podrá la IA apoyar tu evaluación...',
     seeMyResults: 'Ver mis resultados',
     submitAndSeeResults: 'Enviar y Ver Resultados',
     myResults: 'Mis Resultados',
