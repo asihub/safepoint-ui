@@ -3,7 +3,7 @@ import { loadProgress, clearProgress } from '../utils/screeningProgress'
 import { useState, useEffect } from 'react'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage'
-import { Heart, Users, Shield, ClipboardList, PlayCircle, TrendingUp } from 'lucide-react'
+import { Heart, Users, Shield, ClipboardList, PlayCircle, TrendingUp, Leaf } from 'lucide-react'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -104,6 +104,8 @@ export default function Home() {
           description={t('modeQuickCheckDesc')} onClick={() => start('self')} primary />
         <ModeCard icon={<Users size={22} />} title={t('modeHelpNow')}
           description={t('modeHelpNowDesc')} onClick={() => startCrisis()} urgent />
+        <ModeCard icon={<Leaf size={22} />} title={t('wellbeingResources')}
+          description={t('wellbeingResourcesDesc')} onClick={() => navigate('/wellbeing')} olive />
         <ModeCard icon={<TrendingUp size={22} />} title={t('trackMyProgress')}
           description={t('trackMyProgressDesc')} onClick={() => navigate('/progress')} steel />
 
@@ -125,10 +127,10 @@ export default function Home() {
   )
 }
 
-function ModeCard({ icon, title, description, onClick, primary, urgent, steel, mauve, teal }) {
-  const bg = urgent ? 'var(--high)' : primary ? 'var(--sage-dark)' : steel ? '#4A7A9B' : mauve ? '#7A6B8A' : teal ? '#7A6B5A' : 'var(--white)'
-  const color = urgent || primary || steel || mauve || teal ? 'var(--white)' : 'var(--charcoal)'
-  const border = urgent || primary || steel || mauve || teal ? 'none' : '1px solid var(--sand-dark)'
+function ModeCard({ icon, title, description, onClick, primary, urgent, steel, mauve, teal, olive }) {
+  const bg = urgent ? 'var(--high)' : primary ? 'var(--sage-dark)' : steel ? '#4A7A9B' : mauve ? '#7A6B8A' : teal ? '#7A6B5A' : olive ? '#6B7A5A' : 'var(--white)'
+  const color = urgent || primary || steel || mauve || teal || olive ? 'var(--white)' : 'var(--charcoal)'
+  const border = urgent || primary || steel || mauve || teal || olive ? 'none' : '1px solid var(--sand-dark)'
   return (
     <button onClick={onClick} className="w-full text-left px-5 py-4 rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
       style={{ background: bg, color, border, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>

@@ -47,6 +47,8 @@ export const translations = {
     seeMyResults: 'See my results',
     submitAndSeeResults: 'Submit & See Results',
     myResults: 'My Results',
+    wellbeingResources: 'Wellbeing Resources',
+    wellbeingResourcesDesc: 'Self-help articles and guides for mental wellness',
     trackMyProgressDesc: 'View your assessment history and trends',
     analyzing: 'Analyzing...',
 
@@ -186,6 +188,8 @@ export const translations = {
     seeMyResults: 'Ver mis resultados',
     submitAndSeeResults: 'Enviar y Ver Resultados',
     myResults: 'Mis Resultados',
+    wellbeingResources: 'Recursos de Bienestar',
+    wellbeingResourcesDesc: 'Artículos y guías de autoayuda para el bienestar mental',
     trackMyProgressDesc: 'Ver tu historial de evaluaciones y tendencias',
     analyzing: 'Analizando...',
 

@@ -38,3 +38,6 @@ export default client
 
 export const deleteUser = (username, pin) =>
   client.delete('/auth/user', { data: { username, pin } }).then(r => r.data)
+
+export const getWellbeingResources = () =>
+  client.get('/wellbeing').then(r => r.data)
