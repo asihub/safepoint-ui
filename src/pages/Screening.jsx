@@ -308,7 +308,7 @@ export default function Screening() {
           className="flex items-center gap-1 px-4 py-3 rounded-xl font-medium transition-all"
           style={{
             background: qIndex === 0 && aIndex === 0 ? 'var(--sand-dark)' : 'var(--sage-dark)',
-            color:      'var(--white)',
+            color:      qIndex === 0 && aIndex === 0 ? 'var(--muted)' : 'var(--white)',
             border:     'none',
           }}>
           <ChevronLeft size={18} /> {t('prev')}
