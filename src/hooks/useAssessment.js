@@ -1,6 +1,8 @@
 import { useState } from 'react'
 
 // Global assessment state shared across screens
+const RESULT_KEY = 'sp_last_result'
+
 const initialState = {
   mode: null,                // 'self' | 'proxy'
   questionnaireScores: {},   // { phq9: 14, gad7: 10 }
@@ -12,7 +14,13 @@ const initialState = {
 }
 
 export function useAssessment() {
-  const [assessment, setAssessment] = useState(initialState)
+  const [assessment, setAssessment] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(RESULT_KEY)
+      if (saved) return { ...initialState, result: JSON.parse(saved) }
+    } catch {}
+    return initialState
+  })
 
   const setMode = (mode) =>
     setAssessment(prev => ({ ...prev, mode }))
@@ -41,10 +49,15 @@ export function useAssessment() {
   const setLocation = (location) =>
     setAssessment(prev => ({ ...prev, location }))
 
-  const setResult = (result) =>
+  const setResult = (result) => {
+    try { sessionStorage.setItem(RESULT_KEY, JSON.stringify(result)) } catch {}
     setAssessment(prev => ({ ...prev, result }))
+  }
 
-  const reset = () => setAssessment(initialState)
+  const reset = () => {
+    sessionStorage.removeItem(RESULT_KEY)
+    setAssessment(initialState)
+  }
 
   return {
     assessment,

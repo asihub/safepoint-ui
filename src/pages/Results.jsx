@@ -56,9 +56,6 @@ export default function Results() {
 
   const config = RISK_CONFIG[result.riskLevel] || RISK_CONFIG.LOW
 
-  // Combined score — numeric representation 0–100
-  const combinedScore = computeCombinedScore(result)
-
   return (
     <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-6 py-8">
 
@@ -81,6 +78,13 @@ export default function Results() {
           <div className="text-sm" style={{ color: 'var(--charcoal)', opacity: 0.8 }}>
             {t(config.msg)}
           </div>
+          {result.riskLevel === 'MEDIUM' && (
+            <button onClick={() => navigate('/resources')}
+              className="mt-3 text-sm font-medium underline"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: config.color, padding: 0 }}>
+              Find mental health support near you →
+            </button>
+          )}
         </div>
       </div>
 
@@ -104,18 +108,18 @@ export default function Results() {
         <div className="flex flex-col gap-3">
           {result.phq9Score != null && (
             <ScoreRow label="PHQ-9 (Depression)" score={result.phq9Score} max={27}
-              severity={result.phq9Score >= 20 ? t('severe') : result.phq9Score >= 10 ? t('moderate') : t('mild')}
+              severity={result.phq9Score >= 20 ? 'HIGH' : result.phq9Score >= 10 ? 'MEDIUM' : 'LOW'}
               color={result.phq9Score >= 20 ? 'var(--high)' : result.phq9Score >= 10 ? 'var(--medium)' : 'var(--low)'}
-              percent={Math.round((result.phq9Score / 27) * 100)}
-              tooltip={`Your score: ${result.phq9Score} / 27. Ranges: 0–4 minimal, 5–9 mild, 10–14 moderate, 15–19 moderately severe, 20–27 severe.`}
+              percent={result.phq9Score >= 20 ? 100 : result.phq9Score >= 10 ? 60 : 25}
+              tooltip={`Score: ${result.phq9Score}/27. Clinical severity: ${result.phq9Score >= 20 ? 'severe' : result.phq9Score >= 15 ? 'moderately severe' : result.phq9Score >= 10 ? 'moderate' : result.phq9Score >= 5 ? 'mild' : 'minimal'}.`}
             />
           )}
           {result.gad7Score != null && (
             <ScoreRow label="GAD-7 (Anxiety)" score={result.gad7Score} max={21}
-              severity={result.gad7Score >= 15 ? t('severe') : result.gad7Score >= 10 ? t('moderate') : t('mild')}
+              severity={result.gad7Score >= 15 ? 'HIGH' : result.gad7Score >= 10 ? 'MEDIUM' : 'LOW'}
               color={result.gad7Score >= 15 ? 'var(--high)' : result.gad7Score >= 10 ? 'var(--medium)' : 'var(--low)'}
-              percent={Math.round((result.gad7Score / 21) * 100)}
-              tooltip={`Your score: ${result.gad7Score} / 21. Ranges: 0–4 minimal, 5–9 mild, 10–14 moderate, 15–21 severe.`}
+              percent={result.gad7Score >= 15 ? 100 : result.gad7Score >= 10 ? 60 : 25}
+              tooltip={`Score: ${result.gad7Score}/21. Clinical severity: ${result.gad7Score >= 15 ? 'severe' : result.gad7Score >= 10 ? 'moderate' : result.gad7Score >= 5 ? 'mild' : 'minimal'}.`}
             />
           )}
         </div>
@@ -124,87 +128,49 @@ export default function Results() {
       {/* ── AI Text score ── */}
 
 
-      {result.aiAnalysis && (
-        <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
-          <div className="flex items-center gap-2 mb-4">
-            <Brain size={16} style={{ color: 'var(--muted)' }} />
-            <h3 className="font-semibold" style={{ color: 'var(--charcoal)' }}>
-              AI Text Analysis
-            </h3>
-          </div>
-          <div className="flex flex-col gap-3">
-            <ScoreRow
-              label="Risk level from text"
-              score={null}
-              scoreLabel={result.aiAnalysis.riskLevel}
-              percent={Math.round(result.aiAnalysis.confidence * 100)}
-              color={RISK_COLOR[result.aiAnalysis.riskLevel] || 'var(--muted)'}
-              severity={(() => {
-                const scores = result.aiAnalysis.scores || {}
-                const low  = Math.round((scores.low  || 0) * 100)
-                const high = Math.round((scores.high || 0) * 100)
-                const med  = 100 - low - high
-                const conf = result.aiAnalysis.riskLevel === 'LOW' ? low
-                           : result.aiAnalysis.riskLevel === 'HIGH' ? high : med
-                return `${conf}% confidence`
-              })()}
-              tooltip={`A fine-tuned DistilBERT model analyzed your free text and classified it as ${result.aiAnalysis.riskLevel} risk with ${Math.round(result.aiAnalysis.confidence * 100)}% confidence. The bar shows how certain the model is — higher confidence means the text more clearly matched patterns from the training data. This is one of three signals used in the final assessment.`}
-            />
-
-          </div>
-
-          {/* Signals */}
-          {result.aiAnalysis.signals?.length > 0 && (
-            <div className="mt-4">
-              <p className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
-                {t('signalsDetected')}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {result.aiAnalysis.signals.map(s => (
-                  <span key={s} className="text-xs px-3 py-1 rounded-full"
-                    style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}>
-                    {s.replace(/_/g, ' ')}
-                  </span>
-                ))}
+      {result.aiAnalysis && (() => {
+        const ai = result.aiAnalysis
+        const aiColor = RISK_COLOR[ai.riskLevel] || 'var(--muted)'
+        const aiPercent = ai.riskLevel === 'HIGH' ? 100 : ai.riskLevel === 'MEDIUM' ? 60 : 25
+        const aiSeverity = `${ai.riskLevel} (${Math.round(ai.confidence * 100)}% confidence)`
+        return (
+          <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--white)' }}>
+            <div className="flex items-center gap-2 mb-4">
+              <Brain size={16} style={{ color: 'var(--muted)' }} />
+              <h3 className="font-semibold" style={{ color: 'var(--charcoal)' }}>
+                AI Text Analysis
+              </h3>
+            </div>
+            <div className="flex flex-col gap-3">
+              <ScoreRow
+                label="Crisis level from text"
+                score={null}
+                percent={aiPercent}
+                color={aiColor}
+                severity={aiSeverity}
+                tooltip={`A fine-tuned DistilBERT model analyzed your free text and classified it as ${ai.riskLevel} risk with ${Math.round(ai.confidence * 100)}% confidence. This is one of the signals used in the final assessment.`}
+              />
+            </div>
+            {ai.signals?.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
+                  {t('signalsDetected')}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {ai.signals.map(s => (
+                    <span key={s} className="text-xs px-3 py-1 rounded-full"
+                      style={{ background: 'var(--sand-dark)', color: 'var(--muted)' }}>
+                      {s.replace(/_/g, ' ')}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Combined score ── */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'var(--white)' }}>
-        <div className="flex items-center gap-2 mb-4">
-          <CheckCircle size={16} style={{ color: 'var(--muted)' }} />
-          <h3 className="font-semibold" style={{ color: 'var(--charcoal)' }}>
-            Combined Assessment
-          </h3>
-        </div>
-
-        {/* Combined score bar */}
-        <div className="flex items-center gap-4 mb-3">
-          <div className="flex-1">
-            <div className="h-3 rounded-full overflow-hidden" style={{ background: 'var(--sand-dark)' }}>
-              <div className="h-full rounded-full transition-all"
-                style={{ width: `${combinedScore}%`, background: config.color }} />
-            </div>
+            )}
           </div>
-          <span className="font-bold text-lg" style={{ color: config.color, minWidth: 48 }}>
-            {combinedScore}
-            <span className="text-xs font-normal" style={{ color: 'var(--muted)' }}>/100</span>
-          </span>
-        </div>
+        )
+      })()}
 
-        {/* Combined result */}
-        <div className="text-sm" style={{ color: 'var(--muted)', lineHeight: 1.8 }}>
-          <p>Your risk level has been assessed as <span style={{ color: config.color, fontWeight: 600 }}>{result.riskLevel}</span>.</p>
-          <p style={{ color: 'var(--charcoal)', fontWeight: 600 }}>
-            {result.riskLevel === 'HIGH'   && 'We strongly recommend reaching out to a crisis service immediately.'}
-            {result.riskLevel === 'MEDIUM' && 'We recommend speaking with a mental health professional soon.'}
-            {result.riskLevel === 'LOW'    && 'Continue monitoring how you feel and reach out if things change.'}
-          </p>
-        </div>
-      </div>
+
 
       {/* Wellness resources — shown for LOW risk only */}
       {result.riskLevel === 'LOW' && (
@@ -216,11 +182,7 @@ export default function Results() {
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
-        <button onClick={() => navigate('/resources')}
-          className="flex items-center justify-center gap-2 py-3 rounded-xl font-medium"
-          style={{ background: 'var(--sage-dark)', color: 'var(--white)' }}>
-          <MapPin size={18} /> {t('findSupportNearMe')}
-        </button>
+
         <ExportPdf result={result} />
         <ExportFhir result={result} />
       </div>
@@ -232,30 +194,6 @@ export default function Results() {
  * Computes a combined 0–100 score from all available signals.
  * PHQ-9 contributes 40%, GAD-7 contributes 30%, AI confidence contributes 30%.
  */
-function computeCombinedScore(result) {
-  let total = 0
-  let weight = 0
-
-  if (result.phq9Score != null) {
-    total  += (result.phq9Score / 27) * 40
-    weight += 40
-  }
-  if (result.gad7Score != null) {
-    total  += (result.gad7Score / 21) * 30
-    weight += 30
-  }
-  if (result.aiAnalysis) {
-    // Map risk level to a 0–1 value weighted by confidence
-    const riskVal = { LOW: 0.2, MEDIUM: 0.55, HIGH: 0.9 }[result.aiAnalysis.riskLevel] || 0.2
-    total  += riskVal * result.aiAnalysis.confidence * 30
-    weight += 30
-  }
-
-  if (weight === 0) return 0
-  // Normalize to available weight
-  return Math.min(100, Math.round((total / weight) * 100))
-}
-
 function ScoreRow({ label, score, max, percent, color, severity, tooltip }) {
   const [open, setOpen] = useState(false)
   return (
@@ -264,7 +202,7 @@ function ScoreRow({ label, score, max, percent, color, severity, tooltip }) {
         <span style={{ color: 'var(--charcoal)' }}>{label}</span>
         <span className="flex items-center gap-1.5">
           <span className="font-semibold" style={{ color }}>
-            {score != null ? `${score}/${max} — ` : ''}{severity}
+            {severity}
           </span>
           {tooltip && (
             <span className="relative">
