@@ -317,6 +317,30 @@ export default function Progress() {
             )
           })}
         </div>
+        {/* Pagination controls — bottom */}
+        {history.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between px-5 py-3"
+            style={{ borderTop: '1px solid var(--sand-dark)' }}>
+            <button onClick={() => { setPage(p => Math.max(1, p - 1)); window.scrollTo(0,0) }} disabled={page === 1}
+              className="text-xs px-3 py-1 rounded-lg border transition-all"
+              style={{
+                borderColor: 'var(--sand-dark)',
+                color: page === 1 ? 'var(--sand-dark)' : 'var(--charcoal)',
+                opacity: page === 1 ? 0.4 : 1,
+              }}>← Prev</button>
+            <span className="text-xs" style={{ color: 'var(--muted)' }}>
+              Page {page} of {Math.ceil(history.length / PAGE_SIZE)}
+            </span>
+            <button onClick={() => { setPage(p => Math.min(Math.ceil(history.length / PAGE_SIZE), p + 1)); window.scrollTo(0,0) }}
+              disabled={page === Math.ceil(history.length / PAGE_SIZE)}
+              className="text-xs px-3 py-1 rounded-lg border transition-all"
+              style={{
+                borderColor: 'var(--sand-dark)',
+                color: page === Math.ceil(history.length / PAGE_SIZE) ? 'var(--sand-dark)' : 'var(--charcoal)',
+                opacity: page === Math.ceil(history.length / PAGE_SIZE) ? 0.4 : 1,
+              }}>Next →</button>
+          </div>
+        )}
       </div>
 
 

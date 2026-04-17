@@ -123,6 +123,37 @@ export default function Wellbeing() {
         </p>
       )}
 
+      {/* Pagination top */}
+      {!loading && !error && totalPages > 1 && (
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => { setPage(p => Math.max(1, p - 1)); setExpanded(null); window.scrollTo(0, 0) }}
+            disabled={page === 1}
+            className="px-4 py-1.5 rounded-xl text-xs font-medium border transition-all"
+            style={{
+              borderColor: 'var(--sand-dark)',
+              color: page === 1 ? 'var(--sand-dark)' : 'var(--charcoal)',
+              opacity: page === 1 ? 0.4 : 1,
+            }}>
+            ← Prev
+          </button>
+          <span className="text-xs" style={{ color: 'var(--muted)' }}>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => { setPage(p => Math.min(totalPages, p + 1)); setExpanded(null); window.scrollTo(0, 0) }}
+            disabled={page === totalPages}
+            className="px-4 py-1.5 rounded-xl text-xs font-medium border transition-all"
+            style={{
+              borderColor: 'var(--sand-dark)',
+              color: page === totalPages ? 'var(--sand-dark)' : 'var(--charcoal)',
+              opacity: page === totalPages ? 0.4 : 1,
+            }}>
+            Next →
+          </button>
+        </div>
+      )}
+
       {/* Resource list */}
       {!loading && !error && (
         <div className="flex flex-col gap-3">

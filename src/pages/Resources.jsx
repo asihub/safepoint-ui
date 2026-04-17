@@ -453,9 +453,9 @@ export default function Resources() {
         </div>
       )}
 
-      {/* Pagination */}
+      {/* Pagination top */}
       {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-between mb-2 mt-2">
+        <div className="flex items-center justify-between">
           <button onClick={() => { setPage(p => Math.max(1, p-1)); window.scrollTo(0,0) }}
             disabled={page === 1}
             className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
@@ -478,6 +478,27 @@ export default function Resources() {
       <div className="flex flex-col gap-3">
         {paginated.map((f, i) => <FacilityCard key={(page-1)*PAGE_SIZE+i} facility={f} />)}
       </div>
+
+      {/* Pagination bottom */}
+      {!loading && totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <button onClick={() => { setPage(p => Math.max(1, p-1)); window.scrollTo(0,0) }}
+            disabled={page === 1}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
+            style={{ borderColor: 'var(--sand-dark)', color: page === 1 ? 'var(--sand-dark)' : 'var(--charcoal)', opacity: page === 1 ? 0.4 : 1 }}>
+            ← Prev
+          </button>
+          <span className="text-xs" style={{ color: 'var(--muted)' }}>
+            Page {page} of {totalPages}
+          </span>
+          <button onClick={() => { setPage(p => Math.min(totalPages, p+1)); window.scrollTo(0,0) }}
+            disabled={page === totalPages}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
+            style={{ borderColor: 'var(--sand-dark)', color: page === totalPages ? 'var(--sand-dark)' : 'var(--charcoal)', opacity: page === totalPages ? 0.4 : 1 }}>
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   )
 }
