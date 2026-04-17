@@ -37,9 +37,9 @@ function saveToHistory(result) {
 }
 
 const RISK_CONFIG = {
-  LOW:    { color: 'var(--low)',    bg: '#EDF4EE', icon: <CheckCircle size={24} />,  label: 'lowRisk',    msg: 'lowRiskMsg' },
-  MEDIUM: { color: 'var(--medium)', bg: '#FDF6E3', icon: <AlertCircle size={24} />,  label: 'mediumRisk', msg: 'mediumRiskMsg' },
-  HIGH:   { color: 'var(--high)',   bg: '#FDECEA', icon: <AlertTriangle size={24} />, label: 'highRisk',   msg: 'highRiskMsg' },
+  LOW:    { color: 'var(--low)',    bg: '#EDF4EE', icon: <CheckCircle size={24} />,  label: 'lowRisk',    msg: 'lowRiskMsg',    proxyMsg: 'Your responses suggest the person you are concerned about is managing relatively well right now.' },
+  MEDIUM: { color: 'var(--medium)', bg: '#FDF6E3', icon: <AlertCircle size={24} />,  label: 'mediumRisk', msg: 'mediumRiskMsg',  proxyMsg: 'Your responses suggest the person you are concerned about may benefit from speaking with a mental health professional.' },
+  HIGH:   { color: 'var(--high)',   bg: '#FDECEA', icon: <AlertTriangle size={24} />, label: 'highRisk',   msg: 'highRiskMsg',   proxyMsg: 'Your responses suggest the person you are concerned about may need immediate support. Please help them reach out now.' },
 }
 
 const RISK_COLOR = { LOW: 'var(--low)', MEDIUM: 'var(--medium)', HIGH: 'var(--high)' }
@@ -49,6 +49,7 @@ export default function Results() {
   const { assessment } = useAssessmentContext()
   const { t }      = useLanguage()
   const result     = assessment.result
+  const isProxy    = assessment.mode === 'proxy'
 
   useEffect(() => { if (result) saveToHistory(result) }, [])
 
@@ -65,7 +66,7 @@ export default function Results() {
           <ChevronLeft size={22} />
         </button>
         <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem' }}>
-          {t('myResults')}
+          {isProxy ? 'Assessment Results' : t('myResults')}
         </h2>
       </div>
 
@@ -76,7 +77,7 @@ export default function Results() {
         <div>
           <div className="font-semibold text-lg mb-1">{t(config.label)}</div>
           <div className="text-sm" style={{ color: 'var(--charcoal)', opacity: 0.8 }}>
-            {t(config.msg)}
+            {isProxy ? config.proxyMsg : t(config.msg)}
           </div>
 
         </div>
@@ -168,7 +169,7 @@ export default function Results() {
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
-        {result.riskLevel === 'LOW' && (
+        {result.riskLevel === 'LOW' && !isProxy && (
           <button
             onClick={() => navigate('/wellbeing')}
             className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium w-full"
@@ -177,7 +178,7 @@ export default function Results() {
             Wellbeing Resources
           </button>
         )}
-        {result.riskLevel === 'MEDIUM' && (
+        {result.riskLevel === 'MEDIUM' && !isProxy && (
           <button
             onClick={() => navigate('/resources')}
             className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium w-full"
