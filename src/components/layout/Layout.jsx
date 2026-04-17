@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Shield , User } from 'lucide-react'
+import { Shield, User, UserCheck } from 'lucide-react'
 import { useLanguage } from '../../hooks/useLanguage'
 
 export default function Layout() {
@@ -7,6 +7,8 @@ export default function Layout() {
   const location = useLocation()
   const { t, lang, switchLang } = useLanguage()
   const isHome = location.pathname === '/'
+  const authUser = (() => { try { return JSON.parse(localStorage.getItem('sp_user') || 'null') } catch { return null } })()
+  const isLoggedIn = !!authUser?.username
   // Disable language switcher during screening to prevent mid-questionnaire language change
   const isScreening = location.pathname === '/screening'
   // Show back-to-results button on secondary pages
@@ -40,9 +42,14 @@ export default function Layout() {
 
         <div className="flex items-center gap-3">
             <button onClick={() => navigate('/auth')}
+              title={isLoggedIn ? authUser.username : 'Sign in to back up your safety plan'}
               className="flex items-center justify-center w-8 h-8 rounded-full border transition-colors hover:opacity-80"
-              style={{ borderColor: 'var(--sand-dark)', color: 'var(--muted)' }}>
-              <User size={15} />
+              style={{
+                borderColor: isLoggedIn ? 'var(--sage-dark)' : 'var(--sand-dark)',
+                background:  isLoggedIn ? 'var(--sage-dark)' : 'transparent',
+                color:       isLoggedIn ? 'var(--white)'     : 'var(--muted)',
+              }}>
+              {isLoggedIn ? <UserCheck size={15} /> : <User size={15} />}
             </button>
           {/* Language switcher — disabled during screening */}
           <div

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { registerUser, verifyUser, deleteUser } from '../api/client'
 import { Copy, CheckCircle, Loader2, ChevronLeft, User, Trash2, Info } from 'lucide-react'
 
-const STORAGE_KEY = 'sp_user'
+const STORAGE_KEY      = 'sp_user'
+const LAST_USER_KEY    = 'sp_last_user'
 
 function loadLocalUser() {
   try {
@@ -12,11 +13,12 @@ function loadLocalUser() {
   } catch { return null }
 }
 
-function saveLocalUser(username) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ username }))
+function saveLocalUser(username, pin) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ username, pin }))
 }
 
-function clearLocalUser() {
+function clearLocalUser(username) {
+  if (username) localStorage.setItem(LAST_USER_KEY, username)
   localStorage.removeItem(STORAGE_KEY)
 }
 
@@ -46,7 +48,9 @@ export default function Auth() {
   // Form fields
   const [username,  setUsername]  = useState(generateUsername)
   const [pin,       setPin]       = useState(generatePin)
-  const [userCode,  setUserCode]  = useState('')
+  const [userCode,  setUserCode]  = useState(() => {
+    try { return localStorage.getItem(LAST_USER_KEY) || '' } catch { return '' }
+  })
   const [verifyPin, setVerifyPin] = useState('')
 
   // On mount — check localStorage
@@ -68,7 +72,7 @@ export default function Auth() {
     setLoading(true); setError(null)
     try {
       const data = await registerUser(pin, username.trim())
-      saveLocalUser(data.username)
+      saveLocalUser(data.username, pin.trim())
       setUser({ username: data.username })
       setMode('loggedIn')
     } catch {
@@ -83,7 +87,7 @@ export default function Auth() {
     try {
       const data = await verifyUser(userCode.trim(), verifyPin)
       if (data.valid) {
-        saveLocalUser(userCode.trim())
+        saveLocalUser(userCode.trim(), verifyPin.trim())
         setUser({ username: userCode.trim() })
         setMode('loggedIn')
       } else {
@@ -116,7 +120,7 @@ export default function Auth() {
   }
 
   const signOut = () => {
-    clearLocalUser()
+    clearLocalUser(user?.username)
     setUser(null)
     setMode('choice')
     setConfirmDelete(false)
