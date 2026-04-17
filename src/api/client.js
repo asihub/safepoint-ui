@@ -24,6 +24,11 @@ export const saveSafetyPlan = (data) =>
 export const getSafetyPlan = (userCode, pin) =>
   client.get('/safety-plan', { params: { userCode, pin } }).then(r => r.data)
 
+export const checkSafetyPlanExists = (userCode, pin) =>
+  client.get('/safety-plan', { params: { userCode, pin } })
+    .then(() => true)
+    .catch(err => err?.response?.status === 404 ? false : Promise.reject(err))
+
 export const deleteSafetyPlan = (userCode, pin) =>
   client.delete('/safety-plan', { params: { userCode, pin } }).then(r => r.data)
 
