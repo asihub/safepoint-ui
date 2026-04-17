@@ -1,16 +1,89 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { saveSafetyPlan, getSafetyPlan, deleteSafetyPlan, checkSafetyPlanExists } from '../api/client'
-import { Save, Loader2, CheckCircle, ChevronLeft, CloudUpload, CloudDownload, Trash2, ShieldCheck, AlertTriangle } from 'lucide-react'
+import { Save, Loader2, CheckCircle, ChevronLeft, CloudUpload, CloudDownload, Trash2, ShieldCheck, AlertTriangle, AlertCircle, Lightbulb, Users, Phone, Home, Brain, ChevronDown, ChevronUp } from 'lucide-react'
 
 const STEPS = [
-  { key: 'warningSigns',         label: 'Warning signs',               hint: 'What tells you that a crisis might be coming? (thoughts, feelings, behaviors)' },
-  { key: 'copingStrategies',     label: 'Internal coping strategies',  hint: 'Things I can do on my own to take my mind off my problems' },
-  { key: 'socialDistractions',   label: 'Social distractions',         hint: 'People and settings that provide distraction and support' },
-  { key: 'trustedContacts',      label: 'People I can ask for help',   hint: 'Name and contact for people I trust' },
-  { key: 'professionalResources',label: 'Professional resources',      hint: 'Therapist, doctor, crisis lines (e.g. 988)' },
-  { key: 'environmentSafety',    label: 'Making the environment safe', hint: 'Steps to remove or reduce access to means of self-harm' },
+  {
+    key: 'warningSigns',
+    label: 'Warning signs',
+    icon: 'AlertCircle',
+    hint: 'What tells you that a crisis might be coming? (thoughts, feelings, behaviors)',
+    examples: [
+      'I start isolating myself and stop answering messages',
+      'I have thoughts like "nobody cares" or "things will never get better"',
+      'I stop eating or sleeping regularly',
+      'I feel a sudden sense of calm after a long period of distress',
+      'I start giving away things I care about',
+    ],
+  },
+  {
+    key: 'copingStrategies',
+    label: 'Internal coping strategies',
+    icon: 'Brain',
+    hint: 'Things I can do on my own to take my mind off my problems',
+    examples: [
+      'Go for a walk outside for at least 20 minutes',
+      'Listen to a specific playlist that lifts my mood',
+      'Practice box breathing: inhale 4s, hold 4s, exhale 4s',
+      'Write in my journal without filtering my thoughts',
+      'Watch a comforting show or movie',
+      'Take a shower and change clothes',
+    ],
+  },
+  {
+    key: 'socialDistractions',
+    label: 'Social distractions',
+    icon: 'Users',
+    hint: 'People and settings that provide distraction and support',
+    examples: [
+      'Call my friend Alex — they always make me laugh',
+      'Go to a coffee shop and be around people without needing to talk',
+      'Visit my local library or bookstore',
+      'Text my sister just to say hi',
+      'Go to the gym or a fitness class',
+    ],
+  },
+  {
+    key: 'trustedContacts',
+    label: 'People I can ask for help',
+    icon: 'Phone',
+    hint: 'Name and contact for people I trust',
+    examples: [
+      'Mom — 555-1234 (available evenings)',
+      'Best friend Jordan — 555-5678',
+      'Neighbor Maria — knows about my situation',
+      'Online support group I trust: [link or name]',
+    ],
+  },
+  {
+    key: 'professionalResources',
+    label: 'Professional resources',
+    icon: 'Lightbulb',
+    hint: 'Therapist, doctor, crisis lines (e.g. 988)',
+    examples: [
+      '988 Suicide & Crisis Lifeline — call or text 988 (24/7, free)',
+      'Crisis Text Line — text HOME to 741741',
+      'My therapist Dr. Smith — 555-9999 (appointments Mon/Wed)',
+      'Nearest ER: City General Hospital, 123 Main St',
+      'NAMI HelpLine — 1-800-950-6264 (Mon–Fri)',
+    ],
+  },
+  {
+    key: 'environmentSafety',
+    label: 'Making the environment safe',
+    icon: 'Home',
+    hint: 'Steps to remove or reduce access to means of self-harm',
+    examples: [
+      'Ask a trusted person to hold onto my medications',
+      'Remove or secure items that could be used to harm myself',
+      'Stay with a friend or family member during a crisis',
+      'Identify a safe place I can go if I need to leave home',
+    ],
+  },
 ]
+
+const STEP_ICONS = { AlertCircle, Brain, Users, Phone, Lightbulb, Home }
 
 const LOCAL_KEY = 'safepoint_safety_plan'
 const AUTH_KEY  = 'sp_user'
@@ -71,7 +144,8 @@ const EMPTY_PLAN = Object.fromEntries(STEPS.map(s => [s.key, '']))
 export default function SafetyPlan() {
   const navigate = useNavigate()
   const [plan, setPlan]             = useState(loadLocal)
-  const [localSaved, setLocalSaved] = useState(false)
+  const [localSaved, setLocalSaved]     = useState(false)
+  const [expandedExamples, setExpandedExamples] = useState({})
   const [serverLoading, setServerLoading]   = useState(false) // false | 'backup' | 'restore' | 'delete'
   const [serverSaved, setServerSaved]       = useState(false)
   const [serverRestored, setServerRestored] = useState(false)
@@ -207,26 +281,87 @@ export default function SafetyPlan() {
 
       {/* Plan steps */}
       <div className="flex flex-col gap-4 mb-6">
-        {STEPS.map((step, i) => (
-          <div key={step.key}>
-            <label className="text-sm font-medium mb-1 block" style={{ color: 'var(--charcoal)' }}>
-              {i + 1}. {step.label}
-            </label>
-            <p className="text-xs mb-2" style={{ color: 'var(--muted)' }}>{step.hint}</p>
-            <textarea
-              value={plan[step.key] || ''}
-              onChange={e => setPlan(prev => ({ ...prev, [step.key]: e.target.value }))}
-              rows={3}
-              className="w-full p-3 rounded-xl border text-sm resize-none outline-none"
-              style={{
-                background: 'var(--white)',
-                borderColor: 'var(--sand-dark)',
-                fontFamily: "'DM Sans', sans-serif",
-                lineHeight: 1.5,
-              }}
-            />
-          </div>
-        ))}
+        {STEPS.map((step, i) => {
+          const Icon = STEP_ICONS[step.icon]
+          const exOpen = expandedExamples[step.key]
+          return (
+            <div key={step.key} className="rounded-2xl overflow-hidden"
+              style={{ background: 'var(--white)', border: '1px solid var(--sand-dark)' }}>
+
+              {/* Step header */}
+              <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'var(--sand)' }}>
+                  {Icon && <Icon size={16} style={{ color: 'var(--sage-dark)' }} />}
+                </div>
+                <div className="flex-1">
+                  <label className="text-sm font-semibold block" style={{ color: 'var(--charcoal)' }}>
+                    {i + 1}. {step.label}
+                  </label>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{step.hint}</p>
+                </div>
+              </div>
+
+              {/* Textarea */}
+              <div className="px-4 pb-2">
+                <textarea
+                  value={plan[step.key] || ''}
+                  onChange={e => setPlan(prev => ({ ...prev, [step.key]: e.target.value }))}
+                  rows={3}
+                  className="w-full p-3 rounded-xl border text-sm resize-none outline-none"
+                  style={{
+                    background: 'var(--sand)',
+                    borderColor: 'var(--sand-dark)',
+                    fontFamily: "'DM Sans', sans-serif",
+                    lineHeight: 1.5,
+                  }}
+                />
+              </div>
+
+              {/* See examples toggle */}
+              <button
+                onClick={() => setExpandedExamples(prev => ({ ...prev, [step.key]: !prev[step.key] }))}
+                className="w-full flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium"
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--sage-dark)',
+                  borderTop: '1px solid var(--sand-dark)',
+                }}>
+                {exOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                {exOpen ? 'Hide examples' : 'See examples'}
+              </button>
+
+              {/* Examples list */}
+              {exOpen && (
+                <div className="px-4 pb-4 flex flex-col gap-1.5"
+                  style={{ borderTop: '1px solid var(--sand-dark)', paddingTop: '0.75rem' }}>
+                  {step.examples.map((ex, j) => (
+                    <button
+                      key={j}
+                      onClick={() => {
+                        const cur = plan[step.key] || ''
+                        const sep = cur.trim() ? '\n' : ''
+                        setPlan(prev => ({ ...prev, [step.key]: cur + sep + ex }))
+                      }}
+                      className="text-left text-xs px-3 py-2 rounded-lg w-full"
+                      style={{
+                        background: 'var(--sand)',
+                        border: '1px solid var(--sand-dark)',
+                        color: 'var(--charcoal)',
+                        cursor: 'pointer',
+                        lineHeight: 1.5,
+                      }}>
+                      + {ex}
+                    </button>
+                  ))}
+                  <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                    Click an example to add it to your plan.
+                  </p>
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {error && (
