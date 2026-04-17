@@ -51,7 +51,7 @@ export default function Results() {
   const result     = assessment.result
   const isProxy    = assessment.mode === 'proxy'
 
-  useEffect(() => { if (result) saveToHistory(result) }, [])
+  useEffect(() => { if (result && !isProxy) saveToHistory(result) }, [])
 
   if (!result) { navigate('/'); return null }
 
