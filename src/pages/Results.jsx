@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAssessmentContext } from '../App'
 import { useLanguage } from '../hooks/useLanguage.jsx'
 import ExportPdf from '../components/ExportPdf'
-import WellnessResources from '../components/WellnessResources'
 import ExportFhir from '../components/ExportFhir'
-import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Brain, BarChart2, ChevronLeft } from 'lucide-react'
+import { Phone, MapPin, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Brain, BarChart2, ChevronLeft, Leaf } from 'lucide-react'
 
 const STORAGE_KEY = 'safepoint_history'
 const MAX_ENTRIES = 30
@@ -172,17 +171,17 @@ export default function Results() {
 
 
 
-      {/* Wellness resources — shown for LOW risk only */}
-      {result.riskLevel === 'LOW' && (
-        <WellnessResources
-          phq9Score={result.phq9Score}
-          gad7Score={result.gad7Score}
-        />
-      )}
-
       {/* Actions */}
       <div className="flex flex-col gap-3">
-
+        {result.riskLevel === 'LOW' && (
+          <button
+            onClick={() => navigate('/wellbeing')}
+            className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium w-full"
+            style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}>
+            <Leaf size={18} />
+            Wellbeing Resources
+          </button>
+        )}
         <ExportPdf result={result} />
         <ExportFhir result={result} />
       </div>
