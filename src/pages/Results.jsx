@@ -25,8 +25,9 @@ function saveToHistory(result) {
       riskLevel:  result.riskLevel,
       phq9Score:  result.phq9Score,
       gad7Score:  result.gad7Score,
-      confidence: result.confidence,
-      signals:    result.aiAnalysis?.signals || [],
+      confidence:   result.confidence,
+      aiRiskLevel:  result.aiAnalysis?.riskLevel || null,
+      signals:      result.aiAnalysis?.signals || [],
     }
     const updated = [entry, ...prev].slice(0, MAX_ENTRIES)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
