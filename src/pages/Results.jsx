@@ -77,13 +77,7 @@ export default function Results() {
           <div className="text-sm" style={{ color: 'var(--charcoal)', opacity: 0.8 }}>
             {t(config.msg)}
           </div>
-          {result.riskLevel === 'MEDIUM' && (
-            <button onClick={() => navigate('/resources')}
-              className="mt-3 text-sm font-medium underline"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: config.color, padding: 0 }}>
-              Find mental health support near you →
-            </button>
-          )}
+
         </div>
       </div>
 
@@ -180,6 +174,15 @@ export default function Results() {
             style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}>
             <Leaf size={18} />
             Wellbeing Resources
+          </button>
+        )}
+        {result.riskLevel === 'MEDIUM' && (
+          <button
+            onClick={() => navigate('/resources')}
+            className="flex items-center justify-center gap-2 py-3 rounded-xl border font-medium w-full"
+            style={{ borderColor: 'var(--sand-dark)', color: 'var(--charcoal)' }}>
+            <MapPin size={18} />
+            Find Support Near You
           </button>
         )}
         <ExportPdf result={result} />
