@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { registerUser, verifyUser, deleteUser } from '../api/client'
-import { Copy, CheckCircle, Loader2, ChevronLeft, User, Trash2, Info } from 'lucide-react'
+import { Copy, CheckCircle, Loader2, ChevronLeft, User, Trash2, Info, ShieldCheck } from 'lucide-react'
 
 const STORAGE_KEY      = 'sp_user'
 const LAST_USER_KEY    = 'sp_last_user'
@@ -17,8 +17,9 @@ function saveLocalUser(username, pin) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ username, pin }))
 }
 
-function clearLocalUser(username) {
-  if (username) localStorage.setItem(LAST_USER_KEY, username)
+function clearLocalUser(username, keepLast = true) {
+  if (keepLast && username) localStorage.setItem(LAST_USER_KEY, username)
+  if (!keepLast) localStorage.removeItem(LAST_USER_KEY)
   localStorage.removeItem(STORAGE_KEY)
 }
 
@@ -103,7 +104,7 @@ export default function Auth() {
     setLoading(true); setError(null)
     try {
       await deleteUser(user.username, verifyPin)
-      clearLocalUser()
+      clearLocalUser(null, false)
       setUser(null)
       setConfirmDelete(false)
       setVerifyPin('')
@@ -211,16 +212,27 @@ export default function Auth() {
       {/* ── Choice ── */}
       {mode === 'choice' && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>
-            No email or name required. Your username and PIN are the only way to access your data.
-          </p>
-          <button onClick={() => { setMode('register'); setError(null) }}
+          <div className="rounded-2xl px-4 py-3 mb-2 flex items-start gap-3"
+            style={{ background: '#EDF4EE', border: '1px solid var(--sage)' }}>
+            <ShieldCheck size={16} style={{ color: 'var(--sage-dark)', flexShrink: 0, marginTop: 2 }} />
+            <p className="text-xs" style={{ color: 'var(--sage-dark)', lineHeight: 1.6 }}>
+              No email, name, or personal information required. SafePoint generates
+              an anonymous username and PIN — only their hash is stored on the server.
+              Your identity cannot be recovered from this data.
+            </p>
+          </div>
+          <button onClick={() => { setUsername(generateUsername()); setPin(generatePin()); setMode('register'); setError(null) }}
             className="flex flex-col items-start px-5 py-4 rounded-2xl font-medium text-left"
             style={{ background: 'var(--sage-dark)', color: 'var(--white)', border: 'none', cursor: 'pointer' }}>
             <span className="text-base">Create account</span>
             <span className="text-xs font-normal mt-0.5" style={{ opacity: 0.8 }}>Get an anonymous username and PIN</span>
           </button>
-          <button onClick={() => { setMode('signin'); setError(null) }}
+          <button onClick={() => {
+            try { setUserCode(localStorage.getItem(LAST_USER_KEY) || '') } catch {}
+            setVerifyPin('')
+            setMode('signin')
+            setError(null)
+          }}
             className="flex flex-col items-start px-5 py-4 rounded-2xl font-medium text-left"
             style={{ background: 'var(--white)', color: 'var(--charcoal)', border: '1px solid var(--sand-dark)', cursor: 'pointer' }}>
             <span className="text-base">I already have an account</span>

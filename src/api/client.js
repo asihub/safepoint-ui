@@ -46,3 +46,17 @@ export const deleteUser = (username, pin) =>
 
 export const getWellbeingResources = () =>
   client.get('/wellbeing').then(r => r.data)
+
+// ── Progress backup ──────────────────────────────────────────────────────────
+
+export const saveProgressBackup = (data) =>
+  client.post('/progress-backup', data).then(r => r.data)
+
+export const getProgressBackup = (userCode, pin) =>
+  client.get('/progress-backup', { params: { userCode, pin } }).then(r => r.data)
+
+export const checkProgressBackupExists = (userCode, pin) =>
+  client.get('/progress-backup/exists', { params: { userCode, pin } }).then(r => r.data.exists)
+
+export const deleteProgressBackup = (userCode, pin) =>
+  client.delete('/progress-backup', { params: { userCode, pin } }).then(r => r.data)

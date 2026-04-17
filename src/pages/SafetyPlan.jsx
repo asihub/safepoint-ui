@@ -205,18 +205,6 @@ export default function SafetyPlan() {
         Based on the Stanley-Brown Safety Planning Intervention.
       </p>
 
-      {/* Privacy disclaimer */}
-      <div className="rounded-2xl px-4 py-3 mb-6 flex items-start gap-3"
-        style={{ background: '#EDF4EE', border: '1px solid var(--sage)' }}>
-        <ShieldCheck size={16} style={{ color: 'var(--sage-dark)', flexShrink: 0, marginTop: 2 }} />
-        <p className="text-xs" style={{ color: 'var(--sage-dark)', lineHeight: 1.6 }}>
-          Your safety plan is stored locally on this device. Server backups are
-          encrypted with your PIN using AES-256 before leaving your browser —
-          SafePoint never sees your plan in plain text. Avoid using full names
-          or phone numbers if you share this device.
-        </p>
-      </div>
-
       {/* Plan steps */}
       <div className="flex flex-col gap-4 mb-6">
         {STEPS.map((step, i) => (
@@ -264,6 +252,18 @@ export default function SafetyPlan() {
             ? <><CheckCircle size={18} /> Saved locally!</>
             : <><Save size={18} /> Save locally</>}
         </button>
+
+        {/* Privacy disclaimer */}
+        <div className="rounded-2xl px-4 py-3 flex items-start gap-3"
+          style={{ background: '#EDF4EE', border: '1px solid var(--sage)' }}>
+          <ShieldCheck size={16} style={{ color: 'var(--sage-dark)', flexShrink: 0, marginTop: 2 }} />
+          <p className="text-xs" style={{ color: 'var(--sage-dark)', lineHeight: 1.6 }}>
+            Your safety plan is stored locally on this device. Server backups are
+            encrypted with your PIN using AES-256 before leaving your browser —
+            SafePoint never sees your plan in plain text. Avoid using full names
+            or phone numbers if you share this device.
+          </p>
+        </div>
 
         {/* Server backup card */}
         <div className="rounded-2xl overflow-hidden"
